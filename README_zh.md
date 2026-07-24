@@ -2,6 +2,8 @@
 
 [Video Transcriber AI](https://videotranscriber.ai/) 官方 Agent Skills——将转录文本转化为结构化知识。
 
+[![Validate Skills](https://github.com/VideoTranscriberAI/videotranscriber-skills/actions/workflows/validate-skills.yml/badge.svg)](https://github.com/VideoTranscriberAI/videotranscriber-skills/actions/workflows/validate-skills.yml)
+[![Latest Release](https://img.shields.io/github/v/release/VideoTranscriberAI/videotranscriber-skills)](https://github.com/VideoTranscriberAI/videotranscriber-skills/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 [English](README.md) | [简体中文](README_zh.md)
