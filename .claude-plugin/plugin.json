@@ -1,0 +1,17 @@
+{
+  "name": "videotranscriber-skills",
+  "version": "0.1.0",
+  "description": "Official Agent Skills from Video Transcriber AI.",
+  "author": {
+    "name": "Video Transcriber AI"
+  },
+  "homepage": "https://videotranscriber.ai/",
+  "repository": "https://github.com/VideoTranscriberAI/videotranscriber-skills",
+  "license": "MIT",
+  "keywords": [
+    "transcript",
+    "subtitles",
+    "summary",
+    "translation"
+  ]
+}

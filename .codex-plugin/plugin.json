@@ -1,0 +1,41 @@
+{
+  "name": "videotranscriber-skills",
+  "version": "0.1.0",
+  "description": "Official Agent Skills from Video Transcriber AI.",
+  "author": {
+    "name": "Video Transcriber AI",
+    "url": "https://videotranscriber.ai/"
+  },
+  "homepage": "https://videotranscriber.ai/",
+  "repository": "https://github.com/VideoTranscriberAI/videotranscriber-skills",
+  "license": "MIT",
+  "keywords": [
+    "transcript",
+    "subtitles",
+    "video",
+    "summary",
+    "translation"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Video Transcriber AI Skills",
+    "shortDescription": "Turn transcripts into structured knowledge.",
+    "longDescription": "Analyze transcripts and subtitles with official workflows from Video Transcriber AI.",
+    "developerName": "Video Transcriber AI",
+    "category": "Productivity",
+    "capabilities": [
+      "Read"
+    ],
+    "websiteURL": "https://videotranscriber.ai/",
+    "privacyPolicyURL": "https://videotranscriber.ai/privacy",
+    "termsOfServiceURL": "https://videotranscriber.ai/terms",
+    "defaultPrompt": [
+      "Summarize this transcript and extract action items.",
+      "Turn this transcript into learning notes.",
+      "Translate these subtitles while preserving timestamps."
+    ],
+    "brandColor": "#1C6CFB",
+    "composerIcon": "./skills/transcript-insights/assets/videotranscriberai-logo.png",
+    "logo": "./skills/transcript-insights/assets/videotranscriberai-logo.png"
+  }
+}

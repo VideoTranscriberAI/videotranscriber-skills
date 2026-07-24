@@ -1,0 +1,27 @@
+name: Skill request
+description: Propose a Skill connected to Video Transcriber AI capabilities.
+title: "[Skill]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: user_problem
+    attributes:
+      label: User problem
+      description: What transcript, subtitle, audio, or video workflow should this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: examples
+    attributes:
+      label: Example requests
+      description: Provide fictional examples that should trigger the Skill.
+    validations:
+      required: true
+  - type: textarea
+    id: outputs
+    attributes:
+      label: Expected outputs
+      description: List the outputs and explain how they differ from existing Skills.
+    validations:
+      required: true

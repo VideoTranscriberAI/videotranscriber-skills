@@ -1,0 +1,15 @@
+1
+00:00:00,000 --> 00:00:04,000
+Maya: We are testing a shorter onboarding guide.
+
+2
+00:00:04,500 --> 00:00:09,000
+Leo: I will deliver the final screenshots on Thursday.
+
+3
+00:00:09,500 --> 00:00:14,000
+Priya: Should translated versions launch on Friday too?
+
+4
+00:00:14,500 --> 00:00:18,000
+Maya: We have not decided that yet.

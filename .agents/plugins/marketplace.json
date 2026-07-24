@@ -1,0 +1,20 @@
+{
+  "name": "video-transcriber-ai",
+  "interface": {
+    "displayName": "Video Transcriber AI"
+  },
+  "plugins": [
+    {
+      "name": "videotranscriber-skills",
+      "source": {
+        "source": "local",
+        "path": "./"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}
