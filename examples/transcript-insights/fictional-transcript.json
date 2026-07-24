@@ -1,0 +1,25 @@
+{
+  "language": "en",
+  "segments": [
+    {
+      "start": "00:00:00.000",
+      "end": "00:00:04.000",
+      "text": "Maya: We are testing a shorter onboarding guide."
+    },
+    {
+      "start": "00:00:04.500",
+      "end": "00:00:09.000",
+      "text": "Leo: I will deliver the final screenshots on Thursday."
+    },
+    {
+      "start": "00:00:09.500",
+      "end": "00:00:14.000",
+      "text": "Priya: Should translated versions launch on Friday too?"
+    },
+    {
+      "start": "00:00:14.500",
+      "end": "00:00:18.000",
+      "text": "Maya: We have not decided that yet."
+    }
+  ]
+}
