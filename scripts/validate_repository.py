@@ -129,7 +129,7 @@ def validate_plugin_manifests() -> None:
     claude_marketplace = load_json(ROOT / ".claude-plugin" / "marketplace.json")
 
     expected_name = "videotranscriber-skills"
-    expected_version = "0.1.0"
+    expected_version = "0.2.0"
     for label, manifest in (("Codex", codex), ("Claude", claude)):
         if manifest.get("name") != expected_name:
             fail(f"{label} plugin name does not match {expected_name}")
