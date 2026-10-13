@@ -2,6 +2,8 @@
 
 Official Agent Skills from [Video Transcriber AI](https://videotranscriber.ai/) — transcribe public media and turn transcripts into structured knowledge.
 
+[![Validate Skills](https://github.com/VideoTranscriberAI/videotranscriber-skills/actions/workflows/validate-skills.yml/badge.svg)](https://github.com/VideoTranscriberAI/videotranscriber-skills/actions/workflows/validate-skills.yml)
+[![Latest Release](https://img.shields.io/github/v/release/VideoTranscriberAI/videotranscriber-skills)](https://github.com/VideoTranscriberAI/videotranscriber-skills/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 [English](README.md) | [简体中文](README_zh.md)
