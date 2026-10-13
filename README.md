@@ -1,6 +1,6 @@
 # Video Transcriber AI Skills
 
-Official Agent Skills from [Video Transcriber AI](https://videotranscriber.ai/) — turn transcripts into structured knowledge.
+Official Agent Skills from [Video Transcriber AI](https://videotranscriber.ai/) — transcribe public media and turn transcripts into structured knowledge.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
@@ -11,6 +11,19 @@ Official Agent Skills from [Video Transcriber AI](https://videotranscriber.ai/) 
 Agent Skills are reusable instructions, references, and optional tools that teach an AI agent how to perform a workflow consistently. This repository maintains one canonical Skill source that works with Codex, Claude Code, and other Agent Skills-compatible tools.
 
 ## Available Skills
+
+### transcribe-media
+
+Use the Video Transcriber AI MCP server to:
+
+- transcribe public audio, video, and supported platform URLs
+- choose basic or advanced transcription
+- request speaker diarization, audio events, speech cleanup, and keyterms
+- generate chapters or translations
+- retrieve transcripts and SRT/VTT subtitle links
+- resume an existing transcription task safely
+
+This Skill requires a configured Video Transcriber AI MCP connection and consumes API Quota when it creates a task.
 
 ### transcript-insights
 
@@ -32,11 +45,12 @@ When no output type is specified, the Skill returns Executive Summary, Key Insig
 
 ```mermaid
 flowchart LR
-    A["Transcript / Subtitle / JSON"] --> B["Transcript Insights"]
-    B --> C["Structured Knowledge"]
-    C --> D["Summary · Insights · Actions · Questions"]
-    C --> E["Translation · Chapters · Decisions"]
-    C --> F["Learning Notes · Mind Map"]
+    A["Public media URL"] --> B["Transcribe Media"]
+    B --> C["Transcript / Subtitle / JSON"]
+    C --> D["Transcript Insights"]
+    D --> E["Summary · Insights · Actions · Questions"]
+    D --> F["Translation · Chapters · Decisions"]
+    D --> G["Learning Notes · Mind Map"]
 ```
 
 ## Demo
@@ -83,6 +97,7 @@ Clone the repository and copy or symlink the Skill into the Codex user Skills di
 git clone https://github.com/VideoTranscriberAI/videotranscriber-skills.git
 mkdir -p ~/.agents/skills
 cp -R videotranscriber-skills/skills/transcript-insights ~/.agents/skills/
+cp -R videotranscriber-skills/skills/transcribe-media ~/.agents/skills/
 ```
 
 Restart Codex if the Skill does not appear immediately.
@@ -101,6 +116,7 @@ The Plugin Skill is available as:
 
 ```text
 /videotranscriber-skills:transcript-insights
+/videotranscriber-skills:transcribe-media
 ```
 
 ### Claude Code — Skill only
@@ -109,9 +125,10 @@ The Plugin Skill is available as:
 git clone https://github.com/VideoTranscriberAI/videotranscriber-skills.git
 mkdir -p ~/.claude/skills
 cp -R videotranscriber-skills/skills/transcript-insights ~/.claude/skills/
+cp -R videotranscriber-skills/skills/transcribe-media ~/.claude/skills/
 ```
 
-The standalone Skill is available as `/transcript-insights`.
+The standalone Skills are available as `/transcript-insights` and `/transcribe-media`.
 
 ### Agent Skills CLI
 
@@ -121,20 +138,24 @@ For supported agents such as Codex, Claude Code, Cursor, GitHub Copilot, Windsur
 npx skills add VideoTranscriberAI/videotranscriber-skills
 ```
 
-Follow the CLI prompt to select `transcript-insights` and the target agents.
+Follow the CLI prompt to select `transcribe-media`, `transcript-insights`, or both, and choose the target agents.
 
 ### Manual project installation
 
-Copy `skills/transcript-insights` to the project-specific Skills directory used by your agent:
+Copy the desired directory from `skills/` to the project-specific Skills directory used by your agent:
 
-- Codex: `.agents/skills/transcript-insights`
-- Claude Code: `.claude/skills/transcript-insights`
+- Codex: `.agents/skills/transcribe-media` or `.agents/skills/transcript-insights`
+- Claude Code: `.claude/skills/transcribe-media` or `.claude/skills/transcript-insights`
 
 ## Usage
 
 ### Explicit invocation
 
 Codex:
+
+```text
+Use $transcribe-media to transcribe this public media URL and return the transcript and SRT subtitle link.
+```
 
 ```text
 Use $transcript-insights to generate Summary + Action Items from ./meeting.srt.
@@ -149,6 +170,10 @@ Claude Code standalone Skill:
 Claude Code Plugin:
 
 ```text
+/videotranscriber-skills:transcribe-media Transcribe this public media URL with the basic model.
+```
+
+```text
 /videotranscriber-skills:transcript-insights Translate these subtitles to Japanese.
 ```
 
@@ -160,9 +185,24 @@ The Skill can trigger automatically when its description matches a request:
 Analyze this interview transcript and list the key insights and unresolved questions.
 ```
 
+## MCP setup for transcribe-media
+
+Configure a Streamable HTTP MCP server named `videotranscriber`:
+
+```text
+URL: https://videotranscriber.ai/mcp
+Authorization: Bearer YOUR_VS_API_KEY
+```
+
+Create the API Key in the Video Transcriber AI API console and keep it in the client's connection settings. Never place it in a prompt or commit it to this repository. See the [MCP setup guide](https://videotranscriber.ai/code-docs/mcp) for Codex, Claude Code, and JSON configuration examples.
+
+Installing the Skill and configuring the MCP connection are separate steps. Restart or reload the client after adding the connection, then verify that `create_transcription`, `get_transcription`, and `get_transcription_result` are available.
+
 ## Supported Inputs
 
-The current instruction-only release accepts:
+`transcribe-media` accepts publicly accessible HTTP/HTTPS media URLs and existing Video Transcriber AI task IDs. It does not upload local or private files.
+
+`transcript-insights` accepts:
 
 - pasted transcript or subtitle text
 - attached `.txt`, `.md`, `.srt`, `.vtt`, or recognizable transcript `.json` files
@@ -170,7 +210,7 @@ The current instruction-only release accepts:
 
 JSON input can contain a transcript string or a segment array using common `start`, `end`, `text`, and optional `speaker` fields. Video Transcriber AI JSON exports receive first-class handling, while ambiguous schemas require user selection rather than guesswork.
 
-Raw audio, video, YouTube URLs, podcast URLs, and public media URLs require transcription before this Skill can analyze them.
+Raw audio, video, YouTube URLs, podcast URLs, and public media URLs can be processed by `transcribe-media` when the configured MCP service supports the source. The resulting transcript can then be passed to `transcript-insights`.
 
 ## Output Rules
 
@@ -192,13 +232,13 @@ The Skill and Plugin structures are validated against Codex and Claude schemas. 
 
 ## Roadmap
 
-Planned enhancements include Video Transcriber AI API support for audio, video, YouTube, podcasts, and public media URLs. API support will enhance the existing workflow rather than create a duplicate analysis Skill.
+Future Skills will continue to build on the shared transcription and transcript-analysis workflows without duplicating their contracts.
 
 See [ROADMAP.md](ROADMAP.md) for the current scope.
 
 ## Privacy
 
-The instruction-only Skill processes content in the host agent environment and does not call the Video Transcriber AI API. Data handling therefore depends on the host agent and its configuration.
+`transcribe-media` sends the submitted public media URL and selected options to Video Transcriber AI through the configured MCP connection. `transcript-insights` processes supplied transcript content in the host agent environment. Data handling also depends on the host agent and its configuration.
 
 Do not commit private meetings, customer subtitles, credentials, or confidential transcripts as examples. Repository examples must be fictional, public, or fully anonymized.
 

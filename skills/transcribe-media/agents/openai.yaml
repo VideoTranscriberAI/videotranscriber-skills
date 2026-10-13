@@ -1,0 +1,13 @@
+interface:
+  display_name: "Transcribe Media"
+  short_description: "Transcribe public media with Video Transcriber MCP"
+  default_prompt: "Use $transcribe-media to transcribe this public media URL and return the transcript and subtitle links."
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "videotranscriber"
+      description: "Video Transcriber AI MCP server"
+      transport: "streamable_http"
+      url: "https://videotranscriber.ai/mcp"
+policy:
+  allow_implicit_invocation: true

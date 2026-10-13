@@ -99,32 +99,32 @@ Add `references/`, `scripts/`, or `assets/` only when the Skill actually needs t
 
 Examples must include at least one normal path and one meaningful boundary or failure path. Tests should describe observable behavior rather than require identical prose.
 
-## API Integration
+## MCP Integration
 
 Treat a Skill as the workflow and an API client, MCP server, or host tool as the capability.
 
-For the planned Video Transcriber AI API integration:
+The published Video Transcriber AI workflow is:
 
 ```text
 Media or URL
     ↓
-Shared Video Transcriber AI API capability
+transcribe-media + Video Transcriber AI MCP
     ↓
 Transcript
     ↓
-Canonical transcript analysis Skills
+transcript-insights when analysis is requested
 ```
 
 Rules:
 
-- Keep API calling logic in one reusable integration rather than copying it into multiple Skills.
+- Keep transcription tool usage in `transcribe-media` rather than copying it into analysis Skills.
 - Pass the resulting transcript into existing analysis workflows.
-- Keep transcript-only usage available when the API integration is absent.
+- Keep transcript-only usage available when the MCP connection is absent.
 - Store credentials in environment variables or host secrets, never in Skill files.
 - Define success, failure, timeout, retry, cancellation, polling limits, and terminal-state handling.
 - Do not claim an API, MCP server, or tool exists until its implementation and packaging are present.
 
-If transcription without analysis becomes a distinct user goal, a future `transcribe-media` Skill may orchestrate the same shared API capability without duplicating the client.
+The MCP connection is configured by the host client. The public Skill declares the dependency and endpoint but never contains a user's API Key.
 
 ## SEO Scope
 

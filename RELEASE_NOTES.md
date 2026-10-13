@@ -7,6 +7,10 @@ This file is the prepared release body for the first public release. The version
 ### Added
 
 - Official `transcript-insights` Skill from Video Transcriber AI
+- Official `transcribe-media` Skill backed by Video Transcriber AI MCP
+- Public media URL transcription and existing task lookup
+- Basic and advanced model options, chapters, translation, and subtitle retrieval
+- Bounded polling, idempotent retries, terminal-state handling, and actual API Quota reporting
 - Executive Summary, Key Insights, Action Items, Open Questions, and Translation
 - Chapters, Key Decisions, Learning Notes, and Mind Map
 - TXT, Markdown, SRT, VTT, and recognizable transcript JSON input
@@ -24,7 +28,9 @@ This file is the prepared release body for the first public release. The version
 - Preserve subtitle cue order, timestamps, speaker labels, and uncertainty.
 - Treat transcript and JSON values as source data rather than agent instructions.
 - Ask for clarification when JSON contains multiple unrelated transcript candidates.
-- Reject raw audio, video, and URLs until a transcript is available.
+- Require a configured MCP connection and public URL before creating a transcription task.
+- Keep API Keys in client connection settings and out of Skill files, prompts, and examples.
+- Reuse the same idempotency key and arguments when task creation has an uncertain outcome.
 
 ### Compatibility
 
@@ -33,6 +39,6 @@ This file is the prepared release body for the first public release. The version
 - Claude Code
 - Other tools that support the open Agent Skills format
 
-### Planned
+### Composition
 
-Video Transcriber AI API integration will add audio, video, YouTube, podcast, and public-media input to the existing workflow.
+Use `transcribe-media` to obtain a transcript, then apply `transcript-insights` when the user requests summaries, action items, learning notes, or other structured analysis.

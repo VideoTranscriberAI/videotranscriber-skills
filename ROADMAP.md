@@ -2,6 +2,12 @@
 
 ## Available
 
+### transcribe-media
+
+MCP-backed transcription for public audio, video, supported platform URLs, and existing Video Transcriber AI task IDs.
+
+The workflow provides bounded polling, idempotent task creation, transcript and subtitle retrieval, optional advanced features, and explicit API Quota handling.
+
 ### transcript-insights
 
 Instruction-only analysis for pasted text, attached files, and accessible local TXT, Markdown, SRT, VTT, or recognizable transcript JSON files.
@@ -18,19 +24,9 @@ Supported outputs:
 - Learning Notes
 - Mind Map
 
+`transcribe-media` can feed retrieved transcript content into `transcript-insights`. Transcript-only analysis remains available without an MCP connection.
+
 ## Planned
-
-### Video Transcriber AI API integration
-
-Add one shared Video Transcriber AI API capability so an agent can obtain a transcript from:
-
-- audio
-- video
-- YouTube URLs
-- podcast URLs
-- public video URLs
-
-The API workflow will feed transcripts into existing analysis Skills rather than duplicate API clients or transcript-analysis logic. Transcript-only workflows will remain available when the integration is absent. The integration must define authentication, timeout, polling limits, failure, retry, cancellation, and terminal-state behavior before release.
 
 ### Candidate Skills
 

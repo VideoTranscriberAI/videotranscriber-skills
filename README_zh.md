@@ -1,6 +1,6 @@
 # Video Transcriber AI Skills
 
-[Video Transcriber AI](https://videotranscriber.ai/) 官方 Agent Skills——将转录文本转化为结构化知识。
+[Video Transcriber AI](https://videotranscriber.ai/) 官方 Agent Skills——转录公开媒体，并将转录文本转化为结构化知识。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
@@ -11,6 +11,19 @@
 Agent Skills 是一组可复用的指令、参考资料和可选工具，用来让 AI Agent 按一致的流程完成任务。本仓库维护一份 canonical Skill 源码，同时支持 Codex、Claude Code 以及其他兼容 Agent Skills 的工具。
 
 ## 已发布 Skills
+
+### transcribe-media
+
+通过 Video Transcriber AI MCP 服务完成：
+
+- 转录公开音频、视频及支持的平台链接
+- 选择基础或高级转录模型
+- 启用说话人识别、声音事件、语音清理和 Keyterms
+- 生成章节或翻译
+- 获取转录全文及 SRT/VTT 字幕链接
+- 安全地继续查询已有转录任务
+
+该 Skill 需要配置 Video Transcriber AI MCP 连接。创建任务会消耗 API Quota。
 
 ### transcript-insights
 
@@ -32,11 +45,12 @@ Agent Skills 是一组可复用的指令、参考资料和可选工具，用来�
 
 ```mermaid
 flowchart LR
-    A["Transcript / 字幕 / JSON"] --> B["Transcript Insights"]
-    B --> C["结构化知识"]
-    C --> D["摘要 · 洞察 · 行动项 · 开放问题"]
-    C --> E["翻译 · 章节 · 决策"]
-    C --> F["学习笔记 · 思维导图"]
+    A["公开媒体链接"] --> B["Transcribe Media"]
+    B --> C["Transcript / 字幕 / JSON"]
+    C --> D["Transcript Insights"]
+    D --> E["摘要 · 洞察 · 行动项 · 开放问题"]
+    D --> F["翻译 · 章节 · 决策"]
+    D --> G["学习笔记 · 思维导图"]
 ```
 
 ## Demo
@@ -81,6 +95,7 @@ codex plugin add videotranscriber-skills@video-transcriber-ai
 git clone https://github.com/VideoTranscriberAI/videotranscriber-skills.git
 mkdir -p ~/.agents/skills
 cp -R videotranscriber-skills/skills/transcript-insights ~/.agents/skills/
+cp -R videotranscriber-skills/skills/transcribe-media ~/.agents/skills/
 ```
 
 如果 Skill 没有立即出现，请重启 Codex。
@@ -99,6 +114,7 @@ Plugin Skill 的调用方式：
 
 ```text
 /videotranscriber-skills:transcript-insights
+/videotranscriber-skills:transcribe-media
 ```
 
 ### Claude Code——仅安装 Skill
@@ -107,9 +123,10 @@ Plugin Skill 的调用方式：
 git clone https://github.com/VideoTranscriberAI/videotranscriber-skills.git
 mkdir -p ~/.claude/skills
 cp -R videotranscriber-skills/skills/transcript-insights ~/.claude/skills/
+cp -R videotranscriber-skills/skills/transcribe-media ~/.claude/skills/
 ```
 
-Standalone Skill 的调用方式为 `/transcript-insights`。
+Standalone Skills 的调用方式为 `/transcript-insights` 和 `/transcribe-media`。
 
 ### Agent Skills CLI
 
@@ -119,20 +136,24 @@ Standalone Skill 的调用方式为 `/transcript-insights`。
 npx skills add VideoTranscriberAI/videotranscriber-skills
 ```
 
-根据 CLI 提示选择 `transcript-insights` 和目标 Agent。
+根据 CLI 提示选择 `transcribe-media`、`transcript-insights` 或两者，并选择目标 Agent。
 
 ### 手动安装到项目
 
-将 `skills/transcript-insights` 复制到 Agent 对应的项目 Skills 目录：
+将 `skills/` 下需要的目录复制到 Agent 对应的项目 Skills 目录：
 
-- Codex：`.agents/skills/transcript-insights`
-- Claude Code：`.claude/skills/transcript-insights`
+- Codex：`.agents/skills/transcribe-media` 或 `.agents/skills/transcript-insights`
+- Claude Code：`.claude/skills/transcribe-media` 或 `.claude/skills/transcript-insights`
 
 ## 使用方式
 
 ### 显式调用
 
 Codex：
+
+```text
+使用 $transcribe-media 转录这个公开媒体链接，并返回转录全文和 SRT 字幕链接。
+```
 
 ```text
 Use $transcript-insights to generate Summary + Action Items from ./meeting.srt.
@@ -147,6 +168,10 @@ Claude Code Standalone Skill：
 Claude Code Plugin：
 
 ```text
+/videotranscriber-skills:transcribe-media 使用基础模型转录这个公开媒体链接。
+```
+
+```text
 /videotranscriber-skills:transcript-insights Translate these subtitles to Japanese.
 ```
 
@@ -158,9 +183,24 @@ Claude Code Plugin：
 分析这份访谈 transcript，列出关键洞察和仍未解决的问题。
 ```
 
+## transcribe-media 的 MCP 配置
+
+配置一个名为 `videotranscriber` 的 Streamable HTTP MCP 服务：
+
+```text
+URL: https://videotranscriber.ai/mcp
+Authorization: Bearer YOUR_VS_API_KEY
+```
+
+在 Video Transcriber AI API 控制台创建 API Key，并将它保存在客户端连接设置中。不要把 Key 写进 Prompt 或提交到本仓库。Codex、Claude Code 和 JSON 配置示例参见 [MCP 接入说明](https://videotranscriber.ai/cn/code-docs/mcp)。
+
+安装 Skill 与配置 MCP 连接是两个独立步骤。添加连接后重启或刷新客户端，并确认可以使用 `create_transcription`、`get_transcription` 和 `get_transcription_result`。
+
 ## 支持的输入
 
-当前 instruction-only 版本支持：
+`transcribe-media` 支持公开可访问的 HTTP/HTTPS 媒体链接和已有的 Video Transcriber AI 任务 ID，不负责上传本地或私有文件。
+
+`transcript-insights` 支持：
 
 - 直接粘贴 transcript 或字幕文本
 - 上传 `.txt`、`.md`、`.srt`、`.vtt` 或可识别的 transcript `.json`
@@ -168,7 +208,7 @@ Claude Code Plugin：
 
 JSON 可以包含完整 transcript 字符串，也可以包含由 `start`、`end`、`text` 和可选 `speaker` 字段组成的 segment 数组。Skill 会优先适配 Video Transcriber AI JSON 导出；遇到多个无法判断的候选字段时会询问用户，不会擅自合并或猜测。
 
-原始音频、视频、YouTube URL、Podcast URL 和公开媒体 URL 目前需要先转录，再交给该 Skill 分析。
+原始音频、视频、YouTube URL、Podcast URL 和公开媒体 URL 可以通过 `transcribe-media` 处理，具体来源以 MCP 服务支持范围为准。取得转录后，可继续交给 `transcript-insights` 分析。
 
 ## 输出规则
 
@@ -190,21 +230,13 @@ Skill 和 Plugin 结构已经通过 Codex 与 Claude schema 校验。Canonical `
 
 ## Roadmap
 
-后续计划通过 Video Transcriber AI API 增强现有 Skill，使 Agent 可以处理：
-
-- 音频
-- 视频
-- YouTube URL
-- Podcast URL
-- 公开媒体 URL
-
-API 将为现有 `transcript-insights` 提供 transcript，不会创建重复的分析 Skill。
+后续 Skill 会继续复用统一的转录与 transcript 分析工作流，避免重复定义相同能力。
 
 详见 [ROADMAP.md](ROADMAP.md)。
 
 ## 隐私
 
-当前 instruction-only Skill 不调用 Video Transcriber AI API，内容在宿主 Agent 环境中处理，具体数据策略由宿主 Agent 及其配置决定。
+`transcribe-media` 会通过已配置的 MCP 连接，将公开媒体链接和所选参数发送到 Video Transcriber AI。`transcript-insights` 在宿主 Agent 环境中处理用户提供的 transcript。具体数据策略同时取决于宿主 Agent 及其配置。
 
 请勿向仓库提交私人会议、客户字幕、凭证或机密 transcript。公开示例必须是自有、已授权、公共领域或完全匿名的内容。
 

@@ -10,7 +10,7 @@
     {
       "name": "videotranscriber-skills",
       "source": "./",
-      "description": "Official Agent Skills from Video Transcriber AI.",
+      "description": "Official media transcription and transcript analysis Skills from Video Transcriber AI.",
       "version": "0.1.0",
       "author": {
         "name": "Video Transcriber AI"
@@ -23,7 +23,9 @@
         "transcript",
         "subtitles",
         "summary",
-        "translation"
+        "translation",
+        "mcp",
+        "transcription"
       ]
     }
   ]

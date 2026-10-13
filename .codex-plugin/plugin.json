@@ -1,7 +1,7 @@
 {
   "name": "videotranscriber-skills",
   "version": "0.1.0",
-  "description": "Official Agent Skills from Video Transcriber AI.",
+  "description": "Official media transcription and transcript analysis Skills from Video Transcriber AI.",
   "author": {
     "name": "Video Transcriber AI",
     "url": "https://videotranscriber.ai/"
@@ -14,13 +14,15 @@
     "subtitles",
     "video",
     "summary",
-    "translation"
+    "translation",
+    "mcp",
+    "transcription"
   ],
   "skills": "./skills/",
   "interface": {
     "displayName": "Video Transcriber AI Skills",
-    "shortDescription": "Turn transcripts into structured knowledge.",
-    "longDescription": "Analyze transcripts and subtitles with official workflows from Video Transcriber AI.",
+    "shortDescription": "Transcribe media and turn transcripts into knowledge.",
+    "longDescription": "Transcribe public media through Video Transcriber AI MCP, then analyze transcripts and subtitles with official workflows.",
     "developerName": "Video Transcriber AI",
     "category": "Productivity",
     "capabilities": [
@@ -30,6 +32,7 @@
     "privacyPolicyURL": "https://videotranscriber.ai/privacy",
     "termsOfServiceURL": "https://videotranscriber.ai/terms",
     "defaultPrompt": [
+      "Transcribe this public media URL and return the transcript and subtitles.",
       "Summarize this transcript and extract action items.",
       "Turn this transcript into learning notes.",
       "Translate these subtitles while preserving timestamps."
