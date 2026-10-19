@@ -10,6 +10,7 @@ venv/
 .mypy_cache/
 .coverage
 htmlcov/
+dist/
 
 # Editors
 .idea/

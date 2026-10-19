@@ -137,19 +137,28 @@ Expected:
 - No confirmed decisions are identified.
 - No names, owners, dates, or deadlines are invented.
 
-## 10. Raw media and URL boundary
+## 10. Local media boundary
 
 Prompts:
 
 ```text
 Use $transcript-insights on ./recording.mp4.
-Use $transcript-insights on https://www.youtube.com/watch?v=fictional.
 ```
 
 Expected:
 
 - The agent explains that a transcript is required first.
 - It does not claim to upload, fetch, or transcribe the media.
+
+## 10a. Public video summary with transcription available
+
+Prompt: “帮我总结这个视频并整理中文学习笔记：https://www.youtube.com/watch?v=e8WaTlzuid0”.
+
+Expected: hand the URL to transcribe-media, disclose independent API Quota, wait for actual transcript content, and return only the requested summary and learning notes. Do not ask the user to copy text or invoke another Skill. Do not enable paid API chapters or translation merely to produce Chinese notes.
+
+## 10b. Public video summary without an MCP connection
+
+The same prompt starts setup-videotranscriber when available and retains the URL and requested outputs. If setup/transcription capabilities are absent, explain the missing capability and give the real connection guide or offer transcript input. Do not invent a summary, request a Key in chat, or submit a paid connection check.
 
 ## 11. Generic JSON segments
 

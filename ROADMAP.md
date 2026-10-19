@@ -2,6 +2,12 @@
 
 ## Available
 
+### setup-videotranscriber
+
+Client-aware connection and credential guidance, non-billable authenticated tool discovery, and recovery for missing tools or invalid credentials. Existing transcripts remain usable without an API Key.
+
+The setup Skill guides local Codex MCP configuration, and the Claude plugin includes a sensitive credential field. WorkBuddy Token connector and per-skill upload packages can be built from the canonical sources; market publication and target-client installation testing are separate from package validation.
+
 ### transcribe-media
 
 MCP-backed transcription for public audio, video, supported platform URLs, and existing Video Transcriber AI task IDs.

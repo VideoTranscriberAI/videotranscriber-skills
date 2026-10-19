@@ -1,6 +1,6 @@
 {
   "name": "videotranscriber-skills",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Official media transcription and transcript analysis Skills from Video Transcriber AI.",
   "author": {
     "name": "Video Transcriber AI"
@@ -15,5 +15,23 @@
     "translation",
     "mcp",
     "transcription"
-  ]
+  ],
+  "mcpServers": {
+    "videotranscriber": {
+      "type": "http",
+      "url": "https://videotranscriber.ai/mcp",
+      "headers": {
+        "Authorization": "Bearer ${user_config.api_key}"
+      }
+    }
+  },
+  "userConfig": {
+    "api_key": {
+      "type": "string",
+      "title": "Video Transcriber API Key",
+      "description": "Create a Key in the Video Transcriber API console. Transcription uses independent API Quota. Leave empty for transcript-only analysis.",
+      "sensitive": true,
+      "required": false
+    }
+  }
 }

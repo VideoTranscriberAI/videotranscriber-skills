@@ -1,0 +1,20 @@
+{
+  "title": "连接 Video Transcriber",
+  "title_en": "Connect Video Transcriber",
+  "description": "在 Video Transcriber API 控制台创建 Key，并粘贴到此处。转写使用独立 API 额度；网站会员积分不适用。凭证由 WorkBuddy 保存在本机。",
+  "description_en": "Create a Key in the Video Transcriber API console and paste it here. Transcription uses independent API Quota, not website credits. WorkBuddy stores the credential locally.",
+  "docUrl": "https://videotranscriber.ai/code-docs#mcp-overview",
+  "docLabel": "查看连接说明",
+  "docLabel_en": "Connection guide",
+  "fields": [
+    {
+      "key": "VT_API_KEY",
+      "label": "Video Transcriber API Key",
+      "label_en": "Video Transcriber API Key",
+      "type": "password",
+      "required": true,
+      "placeholder": "粘贴 API 控制台生成的 Key",
+      "placeholder_en": "Paste the Key from your API console"
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+interface:
+  display_name: "Connect Video Transcriber"
+  short_description: "Connect your AI client and check MCP access"
+  default_prompt: "Use $setup-videotranscriber to connect Video Transcriber AI and check the connection without starting a transcription."
+policy:
+  allow_implicit_invocation: true

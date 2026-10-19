@@ -37,6 +37,7 @@ videotranscriber-skills/
 │   └── ARCHITECTURE.md
 ├── scripts/
 │   └── validate_repository.py
+├── integrations/workbuddy/   # Token connector metadata and credential form
 ├── .agents/                  # Codex marketplace manifest
 ├── .codex-plugin/            # Codex Plugin manifest
 └── .claude-plugin/           # Claude Plugin and marketplace manifests
@@ -103,7 +104,7 @@ Examples must include at least one normal path and one meaningful boundary or fa
 
 Treat a Skill as the workflow and an API client, MCP server, or host tool as the capability.
 
-The published Video Transcriber AI workflow is:
+The Video Transcriber AI workflow starts with `setup-videotranscriber` when a connection is missing. The business flow is:
 
 ```text
 Media or URL
@@ -124,7 +125,11 @@ Rules:
 - Define success, failure, timeout, retry, cancellation, polling limits, and terminal-state handling.
 - Do not claim an API, MCP server, or tool exists until its implementation and packaging are present.
 
-The MCP connection is configured by the host client. The public Skill declares the dependency and endpoint but never contains a user's API Key.
+The MCP connection is configured by the host client. The setup Skill guides client-specific credential entry and verifies fresh authenticated tool discovery without creating a task. The public Skills and packages contain no user's API Key.
+
+The Codex manifest exposes the canonical Skills; setup guides the client-owned connection and credential. The Claude manifest supplies its own sensitive credential field and MCP mapping. WorkBuddy metadata lives under `integrations/workbuddy/`; the builder reads canonical Skills to create upload or connector archives without maintaining duplicate implementations.
+
+Connection onboarding, an existing healthy connection, a revoked Key, transcript-only use, video-to-notes handoff, and task resumption are separate behavior cases. Validate public connection-documentation URLs as well as local links before release. Package validation does not substitute for target-client credential UI and restart testing.
 
 ## SEO Scope
 
