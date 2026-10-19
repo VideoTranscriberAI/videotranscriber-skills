@@ -13,7 +13,7 @@ Official Skills from [Video Transcriber AI](https://videotranscriber.ai/) — co
 2. Say **“Help me connect Video Transcriber.”** The setup Skill guides credential entry and checks the connection.
 3. Send a public media link and say what you want: a transcript, subtitles, summary, or learning notes.
 
-**Transcription uses independent API Quota. Website credits and unlimited website plans do not cover API calls.** Create a Key in the API console after signing in to [Video Transcriber AI](https://videotranscriber.ai/). Enter it only in the client's credential/settings interface, never in chat. Existing transcript/subtitle analysis does not require an API Key or consume Video Transcriber API Quota; the host's own model usage follows its pricing.
+**Transcription uses independent API Quota. Website credits and unlimited website plans do not cover API calls.** Create a Key in the API console after signing in to [Video Transcriber AI](https://videotranscriber.ai/). Paste it once into the hidden local input or client credential settings, never in chat. Existing transcript/subtitle analysis does not require an API Key or consume Video Transcriber API Quota; the host's own model usage follows its pricing.
 
 ## Install for your client
 
@@ -28,7 +28,7 @@ codex plugin add videotranscriber-skills@video-transcriber-ai
 
 In the desktop app you can install from **Plugins Directory → Video Transcriber AI → Video Transcriber AI Skills** after adding the marketplace. Open a new conversation and ask to connect.
 
-The setup Skill guides your client's connection and credential settings; the Key is not supplied by plugin installation. Read the [client-specific steps](skills/setup-videotranscriber/references/clients.md) if the dialog is unavailable. These instructions target the local Codex/plugin route; other ChatGPT surfaces have their own connection requirements.
+The setup Skill launches a local helper. Paste the Key once into its hidden input; it validates and saves the connection, then guides a client refresh and resumes your request. The Key is saved as plaintext in your local user config with restricted file permissions and remains available after restart. The helper requires Python 3.11+; if a local window cannot open, it provides a hidden-input command for your own terminal. See [local setup](skills/setup-videotranscriber/references/local-setup.md). Plugin installation does not supply a Key. These instructions target the local Codex/plugin route; other ChatGPT surfaces have their own connection requirements.
 
 ### Claude Code
 
@@ -39,7 +39,7 @@ Run inside Claude Code:
 /plugin install videotranscriber-skills@video-transcriber-ai
 ```
 
-Enable the plugin, fill the masked **Video Transcriber API Key** field when prompted, and open a new conversation. Leave the optional Key empty if you only want to analyze existing text. Older clients can use the [manual connection fallback](skills/setup-videotranscriber/references/clients.md).
+Enable the plugin and ask to connect Video Transcriber. Use the native **Video Transcriber API Key** field if your client presents it; otherwise the setup Skill launches the same [local helper](skills/setup-videotranscriber/references/local-setup.md), writes the Claude Code user configuration, and guides a connection refresh. Existing-text analysis requires no Key. Environment-based options remain in the [client-specific guide](skills/setup-videotranscriber/references/clients.md).
 
 ### WorkBuddy
 

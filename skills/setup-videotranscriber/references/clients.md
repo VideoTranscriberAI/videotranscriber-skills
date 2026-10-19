@@ -6,7 +6,11 @@ Read the section for the user's actual client. Official service reference: [MCP 
 
 The plugin packages the Skills; the client owns the MCP connection and its credential. If this host provides a credential/settings dialog for Bearer headers, use it to enter the Key. A repo marketplace is not a public directory listing, and these local Codex steps do not establish support in every ChatGPT surface.
 
-Use the client's MCP settings to configure `https://videotranscriber.ai/mcp` with the user's Bearer credential. If there is no credential UI, offer the CLI fallback below, or explain which supported client provides a credential form. Do not instruct the user to enable OAuth for this endpoint.
+Use the [one-paste local helper](local-setup.md) as the default when a connection needs configuring. It opens a hidden local input, validates the Key without a paid task, and persists the client's Bearer header. It does not depend on a desktop process inheriting an environment variable. A supported native credential form can also be used. Do not instruct the user to enable OAuth for this endpoint.
+
+### Advanced: environment-based connection
+
+Offer this only when the user explicitly prefers a terminal/environment setup. It is not the default beginner path.
 
 For a user who chooses terminal setup, collect `VS_API_KEY` using the local prompt at the end of this guide, then run this non-secret registration command:
 
@@ -28,7 +32,11 @@ References: [Codex MCP](https://learn.chatgpt.com/docs/extend/mcp), [OpenAI loca
 
 ## Claude Code
 
-The Claude plugin declares an optional sensitive `api_key` user configuration value and an HTTP MCP server that references it. When the plugin is enabled, a compatible client prompts for **Video Transcriber API Key**. Fill that masked field locally and refresh the connection through `/mcp`. The optional field lets transcript-only users skip connection setup.
+The Claude plugin declares an optional sensitive `api_key` user configuration value and an HTTP MCP server that references it. If the actual client presents **Video Transcriber API Key**, fill that masked field locally and refresh through `/mcp`. The optional field lets transcript-only users skip connection setup. Do not assume every installed Claude version presents this dialog.
+
+When a native form is absent or a standalone Skill is installed, use the [one-paste local helper](local-setup.md) with `--client claude-code`. It writes the user-scoped HTTP connection without putting the Key in a CLI argument or depending on environment inheritance. The user entry takes precedence over the plugin entry; verify the active connection rather than creating another plugin connection.
+
+### Advanced: environment-based connection
 
 If the installed Claude version does not support plugin credential configuration, use user-scoped MCP settings. After the user sets `VS_API_KEY` with the local prompt below, the following registration command stores an environment-variable reference rather than expanding the Key in a shell argument:
 
