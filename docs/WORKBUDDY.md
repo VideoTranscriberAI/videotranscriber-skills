@@ -44,7 +44,7 @@ skills/
   transcript-insights/
 ```
 
-适配配置位于 `integrations/workbuddy/`。`auth_mode: token` 声明本地凭证表单，`VT_API_KEY` 对应 `Authorization` 中的占位变量。包含双语示例，因此最低版本为 WorkBuddy 4.24.0。源码和 ZIP 中都不包含真实 Key。
+适配配置位于 `integrations/workbuddy/`。`auth_mode: token` 声明本地凭证表单，`VS_API_KEY` 对应 `Authorization` 中的占位变量。包含双语示例，因此最低版本为 WorkBuddy 4.24.0。源码和 ZIP 中都不包含真实 Key。
 
 按照 [WorkBuddy 连接器规范](https://open.workbuddy.cn/docs/connector)提交平台审核；本次代码修改不提交审核或上架。平台审核通过并完成实机验收后，才能向用户提供对应市场安装入口。
 

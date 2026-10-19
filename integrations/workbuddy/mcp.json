@@ -4,7 +4,7 @@
       "type": "streamableHttp",
       "url": "https://videotranscriber.ai/mcp",
       "headers": {
-        "Authorization": "Bearer ${VT_API_KEY}"
+        "Authorization": "Bearer ${VS_API_KEY}"
       },
       "timeout": 30000
     }

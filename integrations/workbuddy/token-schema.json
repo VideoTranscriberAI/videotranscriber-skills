@@ -8,7 +8,7 @@
   "docLabel_en": "Connection guide",
   "fields": [
     {
-      "key": "VT_API_KEY",
+      "key": "VS_API_KEY",
       "label": "Video Transcriber API Key",
       "label_en": "Video Transcriber API Key",
       "type": "password",
