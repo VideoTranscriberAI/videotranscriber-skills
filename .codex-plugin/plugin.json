@@ -1,6 +1,6 @@
 {
   "name": "videotranscriber-skills",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Official media transcription and transcript analysis Skills from Video Transcriber AI.",
   "author": {
     "name": "Video Transcriber AI",
@@ -32,6 +32,7 @@
     "privacyPolicyURL": "https://videotranscriber.ai/privacy",
     "termsOfServiceURL": "https://videotranscriber.ai/terms",
     "defaultPrompt": [
+      "Help me connect Video Transcriber AI and check the connection.",
       "Transcribe this public media URL and return the transcript and subtitles.",
       "Summarize this transcript and extract action items.",
       "Turn this transcript into learning notes.",

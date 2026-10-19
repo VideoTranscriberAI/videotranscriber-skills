@@ -42,7 +42,7 @@ Use `Not specified`, `Unclear from the transcript`, or an equivalent concise sta
 - Unreadable path or attachment: state that it cannot be accessed and request an accessible file or pasted text.
 - Unrecognized or ambiguous JSON: report the schema problem and request a supported transcript field or segment array.
 - Very short input: produce only outputs supported by the available content and disclose the limitation.
-- Raw media or URL: request a transcript; do not pretend transcription occurred.
+- Public media URL: follow the main Skill's transcribe-media/setup handoff, then analyze actual retrieved text. When that capability is unavailable, offer the connection guide or request a transcript. Local/private media still requires supplied text or a supported public URL. Never pretend transcription occurred.
 
 ## Final Check
 

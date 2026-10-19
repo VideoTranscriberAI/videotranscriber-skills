@@ -8,6 +8,16 @@ Given a public media URL and no feature options, the Skill uses `basic`, languag
 
 Given a valid `req_...` task ID, the Skill queries that task and never creates a replacement unless the user explicitly requests a new transcription.
 
+“继续查看刚才的转写” uses the task ID retained in the conversation. Ask for selection only if the prior task is missing or ambiguous. Keep the original requested summary/notes so they can be completed when the task succeeds.
+
+## Missing connection
+
+With no MCP tools, use setup-videotranscriber when available and guide the current client's credential configuration, preserving the original URL and intended output. With no setup Skill, provide the official MCP guide and ask which client needs configuration. Never request the Key in chat or use a paid task as a connection check.
+
+## Natural-language summary
+
+A public video URL plus “整理成中文学习笔记” creates a basic transcription once, briefly explains API Quota, and finishes the requested analysis from the actual result without a manual Skill handoff. Existing SRT input goes directly to analysis and never creates a transcription.
+
 ## Creation timeout
 
 When creation times out or the response is lost, the Skill retries at most twice with the same idempotency key and identical arguments. It never generates a new key to bypass an uncertain outcome.

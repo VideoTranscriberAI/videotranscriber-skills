@@ -1,0 +1,23 @@
+{
+  "name": "Video Transcriber AI",
+  "name_zh": "Video Transcriber 视频转写",
+  "name_en": "Video Transcriber AI",
+  "description": "转写公开视频链接，获取字幕，并整理摘要和学习笔记。使用独立 API 额度。",
+  "description_zh": "转写公开视频链接，获取字幕，并整理摘要和学习笔记。使用独立 API 额度。",
+  "description_en": "Transcribe public media, retrieve subtitles, and create summaries or learning notes using independent API Quota.",
+  "source": "videotranscriber-ai",
+  "type": "mcp",
+  "version": "0.3.0",
+  "auth_mode": "token",
+  "minWorkbuddyVersion": "4.24.0",
+  "examples_zh": [
+    "帮我连接 Video Transcriber，并检查连接状态。",
+    "帮我转写这个视频，并整理成中文学习笔记。",
+    "继续查看刚才的转写。"
+  ],
+  "examples_en": [
+    "Connect Video Transcriber and check the connection.",
+    "Transcribe this video and turn it into learning notes.",
+    "Check the previous transcription again."
+  ]
+}

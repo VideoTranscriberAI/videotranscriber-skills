@@ -3,8 +3,10 @@
 ## Request
 
 ```text
-Use $transcribe-media to transcribe https://example.com/media/demo.mp4 with the basic model. Wait for completion, then return the transcript, SRT link, and actual API Quota usage.
+帮我转写这个视频，返回全文和 SRT 字幕链接：https://www.youtube.com/watch?v=e8WaTlzuid0
 ```
+
+This public URL is the official Video Transcriber AI product video. Running this request creates a real task and consumes independent API Quota. It is not a free connection check. For a text-only demo without an API Key, ask “先用示例字幕试一下摘要功能”.
 
 ## Expected behavior
 

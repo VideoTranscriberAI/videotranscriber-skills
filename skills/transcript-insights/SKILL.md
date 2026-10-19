@@ -1,6 +1,6 @@
 ---
 name: transcript-insights
-description: Turn transcripts and subtitles into structured knowledge, including executive summaries, key insights, action items, open questions, translations, chapters, key decisions, learning notes, and mind maps. Use when the user pastes transcript text, attaches or references a TXT, Markdown, SRT, VTT, or transcript JSON file, or asks to analyze, summarize, translate, organize, study, or extract decisions and follow-ups from a meeting, interview, lecture, podcast, video transcript, or subtitle file. Do not use for raw audio, video, or URL transcription until a transcript is available.
+description: Turn transcripts and subtitles into summaries, key insights, action items, open questions, translations, chapters, decisions, learning notes, and mind maps. Use for pasted text, TXT, Markdown, SRT, VTT, transcript JSON, or requests to summarize a public media URL that can first be handed to transcribe-media. Existing text analysis requires no MCP connection.
 ---
 
 # Transcript Insights
@@ -13,7 +13,9 @@ Transform transcript content into the exact structured outputs the user requests
    - Use pasted transcript or subtitle text directly.
    - Read attached TXT, Markdown, SRT, VTT, or JSON transcript files when the host provides them.
    - Read a local file path only when the host grants filesystem access.
-   - If the input is raw audio, video, or a URL without a transcript, explain that transcription is required first and stop.
+   - For a public media URL without a transcript, use `transcribe-media` when available to obtain the text, then continue the original analysis request. Briefly explain that this uses independent API Quota. If the MCP connection is missing, use `setup-videotranscriber` when available to guide connection first and retain the original request. Do not ask the user to manually copy a transcript between Skills.
+   - If transcription/setup capability is absent, explain the missing capability and offer the [connection guide](https://videotranscriber.ai/code-docs#mcp-overview) or supplied transcript input. Do not invent video content or claim transcription happened.
+   - Local/private media cannot be uploaded by these MCP tools. Ask for existing transcript text or a supported public media URL; do not publish the file to make one.
 2. For JSON input, read [references/json-input.md](references/json-input.md) and select one transcript candidate without merging alternatives.
 3. Validate the input. If it is empty, unreadable, or too incomplete for the requested output, state what is missing and ask for usable transcript content.
 4. Detect the requested output types and target language. Read [references/output-types.md](references/output-types.md) whenever choosing formats or combining outputs.
@@ -54,4 +56,4 @@ Treat natural-language combinations as equivalent to the names above. Do not add
 
 Accept transcript content through pasted text, accessible attachments, or accessible local file paths. Supported formats are TXT, Markdown, SRT, VTT, and recognizable transcript JSON.
 
-Do not claim to upload, transcribe, download, or fetch audio, video, YouTube, podcast, or public media URLs without an available transcription capability. When such an input is provided, request a transcript or explain that a future Video Transcriber AI API integration can supply it.
+Use actual `transcribe-media` capability for public media before analysis. Keep transcription and its retries in that Skill. If the user already supplied a transcript or subtitles, analyze that content directly without requesting an API Key, creating a task, or switching to a demo. Only use source text retrieved or supplied in this conversation; failed or incomplete transcription is not permission to fabricate a summary.

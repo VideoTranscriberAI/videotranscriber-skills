@@ -129,7 +129,9 @@ def validate_plugin_manifests() -> None:
     claude_marketplace = load_json(ROOT / ".claude-plugin" / "marketplace.json")
 
     expected_name = "videotranscriber-skills"
-    expected_version = "0.2.0"
+    expected_version = codex.get("version", "")
+    if not re.fullmatch(r"\d+\.\d+\.\d+", expected_version):
+        fail("Plugin version must use semantic versioning")
     for label, manifest in (("Codex", codex), ("Claude", claude)):
         if manifest.get("name") != expected_name:
             fail(f"{label} plugin name does not match {expected_name}")
@@ -143,6 +145,34 @@ def validate_plugin_manifests() -> None:
         names = [entry.get("name") for entry in marketplace.get("plugins", [])]
         if expected_name not in names:
             fail(f"{label} marketplace does not expose {expected_name}")
+        for entry in marketplace.get("plugins", []):
+            if entry.get("name") == expected_name and "version" in entry and entry["version"] != expected_version:
+                fail(f"{label} marketplace version does not match the plugin")
+
+
+def validate_connection_packages() -> None:
+    endpoint = "https://videotranscriber.ai/mcp"
+    claude = load_json(ROOT / ".claude-plugin/plugin.json")
+    credential = claude.get("userConfig", {}).get("api_key", {})
+    server = claude.get("mcpServers", {}).get("videotranscriber", {})
+    if server.get("url") != endpoint or server.get("headers", {}).get("Authorization") != "Bearer ${user_config.api_key}":
+        fail("Claude MCP must reference the plugin credential")
+    if credential.get("sensitive") is not True or credential.get("required") is not False or "default" in credential:
+        fail("Claude credential must be sensitive and optional, with no bundled default")
+
+    adapter = ROOT / "integrations/workbuddy"
+    metadata = load_json(adapter / "connector-meta.json")
+    server = load_json(adapter / "mcp.json")["mcpServers"]["videotranscriber"]
+    fields = load_json(adapter / "token-schema.json").get("fields", [])
+    if len(fields) != 1 or fields[0].get("type") != "password" or not fields[0].get("required") or "defaultValue" in fields[0]:
+        fail("WorkBuddy must collect one required password field without a credential default")
+    expected_header = "Bearer ${" + fields[0]["key"] + "}"
+    if server.get("url") != endpoint or server.get("headers", {}).get("Authorization") != expected_header:
+        fail("WorkBuddy token form and MCP credential placeholder do not match")
+    if metadata.get("auth_mode") != "token" or metadata.get("minWorkbuddyVersion") != "4.24.0":
+        fail("WorkBuddy must declare Token mode and its bilingual-example version floor")
+    if metadata.get("version") != load_json(ROOT / ".codex-plugin/plugin.json")["version"]:
+        fail("WorkBuddy package version does not match the plugin")
 
 
 def validate_transcript_insights() -> None:
@@ -226,12 +256,16 @@ def validate_repository_markdown() -> None:
             fail(f"Missing {path.relative_to(ROOT)}")
         validate_markdown_links(path)
 
+    for path in (ROOT / "docs").rglob("*.md"):
+        validate_markdown_links(path)
+
 
 def main() -> None:
     skills = discover_skills()
     for skill_dir in skills:
         validate_skill(skill_dir)
     validate_plugin_manifests()
+    validate_connection_packages()
     validate_transcript_insights()
     validate_repository_markdown()
 

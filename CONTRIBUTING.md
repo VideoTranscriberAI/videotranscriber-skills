@@ -67,10 +67,11 @@ python3 -m venv .venv
 .venv/bin/python -m pip install PyYAML==6.0.2
 ```
 
-Run repository validation:
+Run repository and archive validation:
 
 ```bash
 .venv/bin/python scripts/validate_repository.py
+.venv/bin/python -m unittest discover -s tests -p 'test_*.py'
 ```
 
 Validate every Skill with the locally installed Skill Creator:
@@ -88,6 +89,8 @@ Validate both Plugin packages:
 claude plugin validate .
 git diff --check
 ```
+
+Review the generated [WorkBuddy packages](docs/WORKBUDDY.md) when changing that adapter. Check the public [MCP setup URL](https://videotranscriber.ai/code-docs#mcp-overview) separately; the local-link validator intentionally does not make network requests.
 
 The Skill Creator, Plugin Creator, and Claude commands require their corresponding local tooling. Before a release, run the behavior cases under `tests/<skill-name>/cases.md` in every officially supported host affected by the change.
 
