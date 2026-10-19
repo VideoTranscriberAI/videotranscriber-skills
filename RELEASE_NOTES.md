@@ -1,7 +1,12 @@
 # Release Notes
 
-## Unreleased — v0.3.0
+## Unreleased — v0.3.1
 
+- Add a one-paste local credential helper for Codex and Claude Code, with hidden input, authenticated MCP discovery, restricted user-config writes, and explicit client refresh status. Preserve existing configuration on cancellation, validation failure, or concurrent edits. Environment-based setup remains an advanced choice using `VS_API_KEY`.
+
+The package manifests use version 0.3.1. This entry does not indicate a tagged or published release.
+
+## v0.3.0
 - Add `setup-videotranscriber` for client-specific onboarding, credential entry, connection checks, and recovery without a paid test task.
 - Add an optional sensitive Claude plugin credential field and client-specific Codex connection guidance, retaining manual fallback for unsupported credential dialogs.
 - Add WorkBuddy Token connector configuration, canonical per-skill upload ZIPs, a connector archive builder, and packaging tests. No marketplace submission is performed by the builder.
@@ -9,8 +14,6 @@
 - Correct the MCP documentation URL to `https://videotranscriber.ai/code-docs#mcp-overview`.
 - Continue public-video summary requests through transcription and analysis in one conversation. Resume pending tasks with a natural-language request and the retained task ID.
 - Replace the placeholder transcription demo with the official product video; add an existing-subtitle demo that does not require API credentials.
-
-The package manifests use version 0.3.0. This entry does not indicate a tagged or published release.
 
 ## v0.2.0 — MCP Transcription
 
