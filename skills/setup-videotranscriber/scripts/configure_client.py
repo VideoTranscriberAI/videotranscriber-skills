@@ -7,9 +7,11 @@ transcription. Credentials are stored in the client's plaintext user config.
 
 import argparse
 import csv
+from email.utils import parsedate_to_datetime
 import getpass
 import io
 import json
+from math import ceil
 import os
 from pathlib import Path
 import re
@@ -30,7 +32,7 @@ except ModuleNotFoundError:
 
 
 ENDPOINT = 'https://videotranscriber.ai/mcp'
-USER_AGENT = 'VideoTranscriber-Local-Setup/0.4.0'
+USER_AGENT = 'VideoTranscriber-Local-Setup/0.4.1'
 TOOLS = {'create_transcription', 'get_transcription', 'get_transcription_result'}
 CLIENTS = {
     'codex': ('mcp_servers', 'url', None),
@@ -68,6 +70,7 @@ ERRORS = {
     'config_selection_required': 'Locate the active user MCP configuration in this client, then supply its path with --config.',
     'unsupported_client': 'This client is not supported by this helper. Use its native MCP credential settings.',
     'permission_failed': 'Private file permissions could not be set; no new configuration was saved.',
+    'permission_required': 'Allow the helper network and user-config access before opening private input again.',
     'io_error': 'The local configuration could not be saved; check filesystem permissions.',
 }
 
@@ -131,19 +134,29 @@ def verify_key(key, opener=None):
         if params is not None:
             body['params'] = params
         req = Request(ENDPOINT, data=json.dumps(body).encode(), headers=headers, method='POST')
+        details = {'operation': method}
         try:
             with transport.open(req, timeout=10) as response:
+                status = getattr(response, 'status', None)
+                if isinstance(status, int):
+                    details['http_status'] = status
+                content_type = response.headers.get('Content-Type', '').split(';', 1)[0].strip().lower()
+                details['content_type'] = content_type if content_type in (
+                    'application/json', 'text/event-stream', 'text/html') else 'other'
                 if response.headers.get('Mcp-Session-Id'):
                     session = response.headers['Mcp-Session-Id']
                     if not session or any(ord(char) < 33 or ord(char) > 126 for char in session):
-                        raise SetupError('unexpected_response')
+                        raise SetupError('unexpected_response', failure_stage='session_header')
                     headers['Mcp-Session-Id'] = session
                 if request_id is None:
                     return None
                 payload = response_payload(response, request_id)
             if (not isinstance(payload, dict) or payload.get('id') != request_id
                     or not isinstance(payload.get('result'), dict) or 'error' in payload):
-                raise SetupError('unexpected_response')
+                error = payload.get('error') if isinstance(payload, dict) else None
+                if isinstance(error, dict) and isinstance(error.get('code'), int):
+                    details['rpc_error_code'] = error['code']
+                raise SetupError('unexpected_response', failure_stage='rpc_envelope')
             return payload['result']
         except HTTPError as exc:
             # A gateway rejection is not proof that the API rejected the Key.
@@ -163,24 +176,46 @@ def verify_key(key, opener=None):
                 (401, 'api_key_revoked'): 'key_revoked',
                 (403, 'api_account_disabled'): 'account_disabled',
             }.get((status, api_code), 'access_blocked' if status in (401, 403) else 'service_unavailable')
-            raise SetupError(code, http_status=status, operation=method) from None
-        except (URLError, TimeoutError, OSError):
-            raise SetupError('network_error') from None
-        except (ValueError, TypeError, UnicodeError):
-            raise SetupError('unexpected_response') from None
+            info = {'http_status': status, 'operation': method}
+            retry_after = exc.headers.get('Retry-After') if exc.headers else None
+            if retry_after is not None:
+                try:
+                    if not isinstance(retry_after, str) or len(retry_after) > 128:
+                        raise ValueError
+                    retry_after = retry_after.strip()
+                    if retry_after.isascii() and retry_after.isdigit() and len(retry_after) <= 8:
+                        delay = int(retry_after)
+                    else:
+                        retry_at = parsedate_to_datetime(retry_after)
+                        if retry_at.tzinfo is None:
+                            raise ValueError
+                        delay = max(0, ceil(retry_at.timestamp() - time.time()))
+                    info['retry_after_seconds'] = delay
+                except (ValueError, TypeError, OverflowError):
+                    info['retry_after_unavailable'] = True
+            raise SetupError(code, **info) from None
+        except SetupError as exc:
+            raise SetupError(exc.code, **{**details, **exc.details}) from None
+        except (URLError, TimeoutError, OSError) as exc:
+            code = 'permission_required' if isinstance(exc, PermissionError) or isinstance(
+                getattr(exc, 'reason', None), PermissionError) else 'network_error'
+            raise SetupError(code, **details, error_type=type(exc).__name__) from None
+        except (ValueError, TypeError, UnicodeError) as exc:
+            raise SetupError('unexpected_response', **details,
+                             failure_stage='response_decode', error_type=type(exc).__name__) from None
 
     result = request('initialize', 1, {'protocolVersion': '2025-03-26',
         'capabilities': {}, 'clientInfo': {'name': 'videotranscriber-local-setup', 'version': '1.0'}})
     protocol = result.get('protocolVersion')
     if not isinstance(protocol, str) or not re.fullmatch(r'\d{4}-\d{2}-\d{2}', protocol):
-        raise SetupError('unexpected_response')
+        raise SetupError('unexpected_response', operation='initialize', failure_stage='protocol_version')
     headers['MCP-Protocol-Version'] = protocol
     request('notifications/initialized')
     result = request('tools/list', 2)
     tools = result.get('tools')
     if not isinstance(tools, list) or not TOOLS.issubset({item.get('name') for item in tools
             if isinstance(item, dict) and isinstance(item.get('name'), str)}):
-        raise SetupError('unexpected_response')
+        raise SetupError('unexpected_response', operation='tools/list', failure_stage='tool_list')
 
 
 def read_key(source='auto', language='en'):
@@ -517,7 +552,46 @@ def saved_key(client, entry):
     return None
 
 
-def setup_client(client, path, read_key=read_key, verify=verify_key, replace=False, check=False):
+def prepare_config_write(path):
+    """Check local write permissions before collecting a credential; store no Key."""
+    try:
+        path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+        descriptor, temporary = tempfile.mkstemp(prefix='.videotranscriber-access-', dir=path.parent)
+        try:
+            os.close(descriptor)
+            private_permissions(Path(temporary))
+        finally:
+            if os.path.exists(temporary):
+                os.unlink(temporary)
+    except PermissionError:
+        raise SetupError('permission_required', operation='config_preflight') from None
+    except OSError:
+        raise SetupError('io_error') from None
+
+
+def verify_with_retry(key, verify, report=None):
+    """Retain one private input in this process while discovery retries twice."""
+    for attempt in range(1, 4):
+        try:
+            return verify(key)
+        except SetupError as exc:
+            retryable = exc.code in ('network_error', 'unexpected_response') or (
+                exc.code == 'service_unavailable' and exc.details.get('http_status') in (
+                    None, 408, 425, 429, 500, 502, 503, 504))
+            delay = max(attempt, exc.details.get('retry_after_seconds', 0))
+            if delay > 30 or exc.details.get('retry_after_unavailable'):
+                retryable = False
+            if not retryable or attempt == 3:
+                if retryable:
+                    raise SetupError(exc.code, **{**exc.details, 'attempts': attempt}) from None
+                raise
+            if report:
+                report({'status': 'retrying_verification', 'attempt': attempt + 1,
+                        'max_attempts': 3, 'retry_after_seconds': delay, 'code': exc.code})
+            time.sleep(delay)
+
+
+def setup_client(client, path, read_key=read_key, verify=verify_key, replace=False, check=False, report=None):
     path = Path(path)
     if path.is_symlink():
         raise SetupError('config_symlink')
@@ -529,7 +603,7 @@ def setup_client(client, path, read_key=read_key, verify=verify_key, replace=Fal
     key = saved_key(client, entry)
     if key and not replace:
         try:
-            verify(key)
+            verify_with_retry(key, verify, report)
         except SetupError as exc:
             if check or exc.code not in ('invalid_key', 'invalid_input', 'key_revoked'):
                 raise
@@ -537,23 +611,27 @@ def setup_client(client, path, read_key=read_key, verify=verify_key, replace=Fal
         else:
             if check:
                 return {'status': 'credential_verified', 'configuration_saved': False,
-                        'reload_required': False, 'client_connection_verified': False}
+                        'reload_required': False, 'client_connection_verified': False,
+                        'next_action': 'discover_client_tools'}
             content = new_config(client, raw, clean_key(key))
             current, _ = parse_config(client, raw)
             rewritten, _ = parse_config(client, content)
             if current == rewritten:
                 private_permissions(path)
                 return {'status': 'credential_verified', 'configuration_saved': False,
-                        'reload_required': False, 'client_connection_verified': False}
+                        'reload_required': False, 'client_connection_verified': False,
+                        'next_action': 'discover_client_tools'}
     if check:
         raise SetupError('key_missing')
     if not key or replace:
+        prepare_config_write(path)
         key = clean_key(read_key())
-        verify(key)
+        verify_with_retry(key, verify, report)
     content = new_config(client, raw, key)
     save_config(path, raw, content)
     return {'status': 'credential_verified', 'configuration_saved': True,
-            'reload_required': True, 'client_connection_verified': False}
+            'reload_required': None, 'client_connection_verified': False,
+            'next_action': 'discover_client_tools'}
 
 
 def default_config(client, home=None, platform=None, environ=None):
@@ -640,12 +718,15 @@ def main():
         else:
             path = default_config(args.client)
         result = setup_client(args.client, path, read_key=lambda: read_key(args.input, args.language),
-                              replace=args.replace, check=args.check)
+                              replace=args.replace, check=args.check,
+                              report=lambda status: print(json.dumps(status), flush=True))
         result['client'] = args.client
         print(json.dumps(result))
         return 0
     except SetupError as exc:
         print(json.dumps({'status': 'error', 'code': exc.code, 'message': str(exc), **exc.details}))
+    except PermissionError:
+        print(json.dumps({'status': 'error', 'code': 'permission_required', 'message': ERRORS['permission_required']}))
     except KeyboardInterrupt:
         print(json.dumps({'status': 'error', 'code': 'cancelled', 'message': ERRORS['cancelled']}))
     except Exception:
