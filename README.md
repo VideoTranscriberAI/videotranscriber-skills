@@ -43,9 +43,17 @@ Enable the plugin and ask to connect Video Transcriber. Use the native **Video T
 
 ### WorkBuddy
 
-Use the **Skills → Add Skill → Upload Skill** route for the per-skill ZIP packages. Then ask to connect; the setup Skill guides a custom MCP connection. See [WorkBuddy installation and packaging](docs/WORKBUDDY.md).
+Use the **Skills → Add Skill → Upload Skill** route for the per-skill ZIP packages. Then ask to connect; the setup Skill opens the local private input and saves the WorkBuddy user MCP configuration. See [WorkBuddy installation and packaging](docs/WORKBUDDY.md).
 
 The repository also includes a Token connector adapter with a local Key form. Marketplace distribution requires WorkBuddy review; this repository does not imply an existing market listing. Target-client behavior still needs installation testing.
+
+### Cursor, Windsurf, Gemini CLI, Copilot, VS Code, Cline, and Roo Code
+
+Install the three standard Skills using your client's supported Skill installer, or ask the Agent to install this repository. For clients supported by the Skills CLI, see [advanced installation](docs/INSTALLATION.md). Then describe the video task normally or say “Help me connect Video Transcriber.”
+
+The setup Skill uses one local configuration helper with a client-specific adapter. Paste the Key once into the private local window; the helper verifies it and saves only that client's user configuration. For a custom editor profile, the Agent first locates its active user MCP configuration. The client must allow local script execution; a native credential form or hidden terminal input is the fallback.
+
+Configuration formats have automated test coverage. Actual Skill discovery, credential UI, and connection reload behavior need acceptance in each installed client. See [supported clients and paths](skills/setup-videotranscriber/references/local-setup.md) and the [client acceptance checklist](docs/CLIENT_TESTING.md).
 
 ## Just ask naturally
 

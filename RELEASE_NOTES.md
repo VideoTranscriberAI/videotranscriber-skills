@@ -1,10 +1,18 @@
 # Release Notes
 
-## Unreleased — v0.3.1
+## Unreleased — v0.4.0
+
+- Extend one-paste local setup to WorkBuddy, Cursor, Windsurf/Cascade, Gemini CLI, GitHub Copilot CLI, VS Code, Cline, and Roo Code, alongside Codex and Claude Code. Preserve JSONC comments and unrelated connections; resolve existing editor profiles before input.
+- Identify discovery requests to production gateways and distinguish gateway/access-policy rejection, invalid/revoked Key, and disabled account. A generic HTTP 401/403 no longer tells users to replace a valid Key.
+- Add configuration/gateway regression tests and a shared client acceptance checklist. Application-level verification is required per client; automated adapters do not claim completed UI testing.
+
+Package manifests use 0.4.0. This entry does not indicate a tagged or published release.
+
+## v0.3.1
 
 - Add a one-paste local credential helper for Codex and Claude Code, with hidden input, authenticated MCP discovery, restricted user-config writes, and explicit client refresh status. Preserve existing configuration on cancellation, validation failure, or concurrent edits. Environment-based setup remains an advanced choice using `VS_API_KEY`.
 
-The package manifests use version 0.3.1. This entry does not indicate a tagged or published release.
+These changes were packaged as 0.3.1; a package version does not itself establish a tagged or published release.
 
 ## v0.3.0
 - Add `setup-videotranscriber` for client-specific onboarding, credential entry, connection checks, and recovery without a paid test task.

@@ -1,55 +1,78 @@
 # One-paste local setup
 
-Use the bundled `scripts/configure_client.py` for local Codex and Claude Code. This is a local configuration helper, not another MCP server. It uses Python 3.11+ with no third-party packages. Identify an available Python runtime before launching it; use the host's bundled runtime when available. Do not install or upgrade system dependencies merely to hide a missing-runtime failure.
+The packaged `scripts/configure_client.py` supports local Codex, Claude Code, WorkBuddy, Cursor, Windsurf/Cascade, Gemini CLI, GitHub Copilot CLI, VS Code, Cline, and Roo Code. It requires Python 3.11+ and uses the standard library. Use an available host/bundled runtime; do not install system dependencies just to hide a missing-runtime error.
 
-## Launch for the actual client
+## Launch for the active client
 
-Resolve the script from this installed Skill's directory, not a guessed checkout or cache version. Run it as an argument array when the host supports one; quote executable and script paths in a shell. These example relative paths assume the Skill directory is the working directory:
-
-```bash
-python3 scripts/configure_client.py --client codex --language zh
-```
+Resolve the script from this installed Skill, not a guessed repository/cache. Select the client from the active host context. Then run, for example:
 
 ```bash
-python3 scripts/configure_client.py --client claude-code --language zh
+python3 scripts/configure_client.py --client cursor --language zh
 ```
 
-Choose `--language en` for English. The default `--input auto` uses a hidden macOS system dialog, a Windows password dialog, or Zenity on Linux when available. The user pastes the Key into that local window and selects Connect. Existing valid saved credentials are reused without another paste. A usable environment-based Codex credential can be migrated to persistent client configuration without another paste.
+The example assumes the Skill directory is the working directory. In actual tool calls use its absolute installed script path and quote paths. The user should not need to type this command themselves. Change only `--client` for the active application:
 
-Before launching, explain the next action in the user's language and say that the Key is saved in their client's local plaintext user configuration with restricted file permissions. Keep the original video URL, output request, and existing task ID available. Only ask which client they use when it cannot be identified.
+| Client | `--client` | User configuration |
+| --- | --- | --- |
+| Codex | `codex` | `$CODEX_HOME/config.toml` or `~/.codex/config.toml` |
+| Claude Code | `claude-code` | `~/.claude.json` |
+| WorkBuddy | `workbuddy` | `~/.workbuddy/mcp.json` |
+| Cursor | `cursor` | `~/.cursor/mcp.json` |
+| Windsurf / Cascade | `windsurf` | Existing legacy `~/.codeium/windsurf/mcp_config.json` or relocated Devin/Cascade config; see below |
+| Gemini CLI | `gemini-cli` | `~/.gemini/settings.json` |
+| GitHub Copilot CLI | `copilot-cli` | `$COPILOT_HOME/mcp-config.json` or `~/.copilot/mcp-config.json` |
+| VS Code user-profile MCP | `vscode` | The active user profile's `mcp.json`; the default is under `Code/User/` in the OS application-data directory |
+| Cline | `cline` | Existing `cline_mcp_settings.json`; honors `CLINE_MCP_SETTINGS_PATH` |
+| Roo Code | `roo-code` | Existing global `mcp_settings.json` |
 
-## Storage and boundaries
+`--language en` selects English. `--input auto` opens a hidden macOS system dialog, a masked Windows dialog, or Zenity on Linux when available. The same input mechanism is shared across these clients; the client must allow local process execution and the OS must allow the dialog. Client transport/configuration support has automated coverage; real application behavior must be accepted in each installed client.
 
-- Codex: `$CODEX_HOME/config.toml`, or `~/.codex/config.toml` by default. Store the Bearer header under `mcp_servers.videotranscriber.http_headers`.
-- Claude Code: the user-scoped `~/.claude.json`, under `mcpServers.videotranscriber.headers`. User-scoped settings take precedence over plugin MCP entries. Check for local/project/managed connections shadowing the user entry before claiming the current session is ready.
-- An explicit `--config <user-config-path>` supports a selected custom profile. A custom `CLAUDE_CONFIG_DIR` requires verifying its actual user config path first; the helper does not guess. Never choose a project `.mcp.json` or repository file to store the Key.
-- The helper preserves unrelated settings, refuses a same-name connection to another endpoint, validates before writing, and checks for concurrent edits before atomic replacement. Failed validation and cancellation keep the previous config. Config files get POSIX mode `0600`, or an explicit current-user Windows ACL.
-- This is plaintext local storage, not an encrypted vault or a cross-Agent credential service. Each client is configured separately. A different OS user or sufficiently privileged local program may access credentials; do not promise that a model with unrestricted local access can never read them.
-- The helper sends the Key only to `https://videotranscriber.ai/mcp`, uses normal TLS verification, rejects HTTP redirects, and performs only initialization and tool discovery. It never submits transcription or tests quota by creating a task.
-- Do not `cat` the config, call a raw config-dump command, print environment contents, run shell tracing, or use `--key <secret>`. A user may choose to reuse `VS_API_KEY` via `--input env`; the helper reads it locally and persists it without putting its value in arguments or output.
+Before launch, tell the user: obtain their Key in the official API console, paste it once into the local window, then click Connect. Explain that it is stored in the selected client's local plaintext user configuration with restricted file permissions. Retain the original URL, requested output, and existing task ID.
 
-## Interpret results and refresh
+## Choose the real profile
 
-The helper emits JSON status only. `awaiting_key` means the user should use the local input, not reply with a Key. Run a long-lived tool call with output yielding while the dialog is open; the dialog times out after five minutes. Do not open repeated dialogs while one is pending.
+- VS Code: macOS uses `~/Library/Application Support/Code/User/`, Windows uses `%APPDATA%/Code/User/`, and Linux uses `$XDG_CONFIG_HOME/Code/User/` or `~/.config/Code/User/`. The helper checks installed editor directories and named profiles. When more than one editor variant or any named profile is present, identify the active file explicitly; a sole existing MCP file may belong to an inactive profile. `VSCODE_PORTABLE` is supported. Use `MCP: Open User Configuration` to identify a custom/remote user profile. For the Copilot harness, prefer `--client copilot-cli`, which writes the portable user configuration read directly by Copilot. The `vscode` profile uses the separate top-level `servers` format.
+- Cline/Roo Code: the helper checks existing global settings in common VS Code, Insiders, Cursor, Windsurf, and VSCodium user storage, including named profiles. Cline CLI's existing `~/.cline/data/settings/cline_mcp_settings.json` is also recognized. If no file or several files exist, use Cline's MCP Servers → Configure → Configure MCP Servers, or Roo's MCP → Edit Global MCP, to locate the active user file. The Agent supplies that non-secret path using `--config`.
+- Windsurf/Cascade: the legacy user path is `~/.codeium/windsurf/mcp_config.json`. Current Devin/Cascade also uses `$XDG_CONFIG_HOME/devin/mcp_config.json` (default `~/.config/devin/mcp_config.json`) on macOS/Linux, or `%APPDATA%/devin/mcp_config.json` on Windows. A single existing match is reused. If both product directories exist, use `--config` to identify the active product even if only one MCP file currently exists. If no file exists, it uses the sole installed product directory, or the legacy Windsurf path when neither directory exists: verify the host is actually Windsurf. For a custom relocated installation, use Open MCP config file and pass its actual path explicitly.
+- Claude custom profiles (`CLAUDE_CONFIG_DIR`), remote/WSL extensions, portable editors, and other custom user-data roots: identify the real user config and pass `--config /absolute/user/config`. Never select a project `.mcp.json`, `.cursor/mcp.json`, `.vscode/mcp.json`, or another repository file for a credential.
 
-`credential_verified` means authenticated MCP discovery succeeded against the service. `configuration_saved: true` and `reload_required: true` mean the local file changed. `client_connection_verified: false` deliberately does not claim that the Agent's running session has loaded it.
+`config_selection_required` occurs before opening a Key dialog. Resolve the active path rather than writing into every detected application. Installing a Skill and configuring its client are separate steps.
 
-- Codex desktop: refresh/restart the connection in Settings → MCP servers. If a reload action is unavailable, restart the client. In an interactive session, inspect `/mcp` afterward. Do not claim to have restarted a client unless the host actually performed it.
-- Claude Code: open `/mcp`, select the Video Transcriber connection and reconnect; restart Claude Code if the new user entry has not appeared. Avoid enabling another duplicate plugin connection. Native discovery after refresh confirms the running client loaded the credential.
-- If restarting changes the conversation, provide a short resume message containing the original public URL/output request or task ID, never the Key. Continue the same task; connection success alone does not authorize a paid demo.
+## Storage and verification
 
-`--check` verifies an existing configured credential without opening a dialog or rewriting configuration. `--replace` asks for one new Key locally and replaces this connection only after successful validation.
+- Codex stores `mcp_servers.<name>.http_headers.Authorization`; JSON clients store `headers.Authorization` in their client-specific server map. Transport fields differ: Windsurf uses `serverUrl`, Gemini CLI uses `httpUrl`, VS Code uses `servers`, and Cline/Roo/WorkBuddy have explicit transport types. The helper handles these differences.
+- Existing healthy credentials and uniquely matching connection names are reused. A usable Codex environment reference can be migrated without another paste. `--replace` prompts for one new Key; `--check` checks the saved credential without prompting or writing.
+- JSON/JSONC edits preserve unrelated text, comments, settings, and server entries. TOML edits preserve unrelated configuration. Unsupported or conflicting layouts stop before credential entry. Cancellation, invalid credentials, network failure, and concurrent edits preserve the original file. Permissions are POSIX `0600` or an explicit current-user Windows ACL. This is plaintext local storage, not an encrypted vault or a shared credential service across Agents.
+- Validation sends credentials only to `https://videotranscriber.ai/mcp`, with TLS verification and no redirects. It uses initialize → initialized notification → tools/list; no paid task is created. A successful check does not prove sufficient API Quota.
+- `invalid_key` and `key_revoked` come from recognized API authentication errors. `account_disabled` requires an account-status remedy. `access_blocked` means an unrecognized 401/403, such as a gateway rejection: do not tell the user to create a new Key. Safe error output includes HTTP status and failed operation, never the server's raw body or a credential.
+- Do not print configuration, environment values, raw HTTP exceptions, or shell tracing. Never pass a secret as `--key`, a command argument, chat input, or a repository file. Advanced `--input env` reads `VS_API_KEY` locally without printing it.
 
-## When a local window cannot open
+## Results and refresh
 
-For `input_unavailable`, give the user a ready-to-copy command with the actual installed script path and available Python executable, for example:
+`awaiting_key` means use the local input. Yield tool output while a dialog remains open; it times out after five minutes. Do not open overlapping dialogs.
+
+`credential_verified` proves authenticated discovery accepted the Key. `configuration_saved: true` plus `reload_required: true` means the local file changed. `client_connection_verified: false` means the running Agent still needs to load the saved connection.
+
+| Client | Refresh/check |
+| --- | --- |
+| Codex | Refresh the server in Settings → MCP servers, or restart Codex if unavailable; inspect the freshly loaded three tools |
+| Claude Code | `/mcp`, reconnect the server; restart if the user-scoped entry is not loaded |
+| WorkBuddy | Reopen/refresh MCP servers in the connector/plugin settings; check the server status, or restart |
+| Cursor | Refresh/enable the server in MCP settings; restart if the updated configuration is not loaded |
+| Windsurf/Cascade | Refresh MCP configuration in the Cascade MCP view, or restart |
+| Gemini CLI | `/mcp refresh`, then `/mcp list` |
+| GitHub Copilot CLI | Inspect `/mcp`; restart the CLI to load changed user configuration |
+| VS Code | `MCP: List Servers`, select the server and restart; confirm tools in the active harness |
+| Cline / Roo Code | Reconnect/restart this server in the MCP Servers panel; check tool discovery |
+
+Inspect the actual client controls before describing a specific button. Do not claim to reload a client unless the host performed it. After refresh, verify fresh discovery exposes `create_transcription`, `get_transcription`, and `get_transcription_result`. Preserve the original URL/task ID and continue the requested task. If a new conversation is needed, give a short resume message containing only the public URL/request or task ID.
+
+## When a private input window is unavailable
+
+Give the user a ready-to-copy command using the actual installed helper and active client, for their own local terminal:
 
 ```bash
-python3 /absolute/installed/skill/scripts/configure_client.py --client codex --input terminal --language zh
+python3 /absolute/installed/skill/scripts/configure_client.py --client cursor --input terminal --language zh
 ```
 
-The user runs it in their own local terminal and pastes once at the hidden prompt. Do not launch terminal input in an Agent tool session that the user cannot type into. The helper refuses noninteractive or echoing terminal input. After success, give the refresh step above and continue the original request. A browser/cloud-only host without local execution needs its own credential UI; this script is not a universal hosted-Agent install path.
-
-For `invalid_key`, ask the user to copy an active Key from their API console and run `--replace`. For network/service failure, retry the check after connectivity recovers without changing credentials. For `config_changed`, rerun after the other client finishes writing. For `config_conflict`, confirm the intended account/environment rather than overwriting another endpoint. For an unsupported config layout or missing runtime, explain the specific limitation and offer the client's actual credential settings; do not invent a button or promise automatic setup.
-
-References: [Codex MCP configuration](https://learn.chatgpt.com/docs/extend/mcp#streamable-http-servers), [Claude Code user scope](https://code.claude.com/docs/en/mcp#user-scope).
+Include `--config` if the actual profile needed it. Only launch terminal input where the user can type; Agent tool stdin is not a user terminal. The helper refuses noninteractive or echoing terminal input. Native supported credential forms are also suitable. Browser/cloud-only Agents need their own credential UI; a local script cannot configure them remotely.

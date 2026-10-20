@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Configure a local Codex or Claude Code connection without exposing the Key to chat.
+"""Configure the active local AI client's MCP connection using private Key input.
 
 Requires Python 3.11+. No third-party packages. This command never creates a
 transcription. Credentials are stored in the client's plaintext user config.
@@ -30,10 +30,27 @@ except ModuleNotFoundError:
 
 
 ENDPOINT = 'https://videotranscriber.ai/mcp'
+USER_AGENT = 'VideoTranscriber-Local-Setup/0.4.0'
 TOOLS = {'create_transcription', 'get_transcription', 'get_transcription_result'}
+CLIENTS = {
+    'codex': ('mcp_servers', 'url', None),
+    'claude-code': ('mcpServers', 'url', 'http'),
+    'workbuddy': ('mcpServers', 'url', 'streamableHttp'),
+    'cursor': ('mcpServers', 'url', None),
+    'windsurf': ('mcpServers', 'serverUrl', None),
+    'gemini-cli': ('mcpServers', 'httpUrl', None),
+    'copilot-cli': ('mcpServers', 'url', 'http'),
+    'vscode': ('servers', 'url', 'http'),
+    'cline': ('mcpServers', 'url', 'streamableHttp'),
+    'roo-code': ('mcpServers', 'url', 'streamable-http'),
+}
+URL_FIELDS = ('url', 'serverUrl', 'httpUrl')
 ERRORS = {
     'cancelled': 'Cancelled; the existing configuration was kept.',
     'invalid_key': 'The Key was rejected. Create or copy an active API Key and try again.',
+    'key_revoked': 'The API Key has been revoked. Copy an active Key from the API console.',
+    'account_disabled': 'The API account is disabled. Check the API account status or contact support.',
+    'access_blocked': 'The endpoint or gateway denied access. Check network and service access policies before retrying.',
     'invalid_input': 'The Key is empty or contains unsupported characters. Copy the Key again.',
     'network_error': 'Connection failed or timed out; the existing configuration was kept.',
     'service_unavailable': 'The MCP service is unavailable; retry later.',
@@ -48,14 +65,17 @@ ERRORS = {
     'input_unavailable': 'No private input window is available. Run --input terminal in your own terminal.',
     'key_missing': 'No saved credential was found. Run setup to enter the Key locally.',
     'custom_config': 'A custom Claude configuration directory is in use; supply its user config with --config.',
+    'config_selection_required': 'Locate the active user MCP configuration in this client, then supply its path with --config.',
+    'unsupported_client': 'This client is not supported by this helper. Use its native MCP credential settings.',
     'permission_failed': 'Private file permissions could not be set; no new configuration was saved.',
     'io_error': 'The local configuration could not be saved; check filesystem permissions.',
 }
 
 
 class SetupError(Exception):
-    def __init__(self, code):
+    def __init__(self, code, **details):
         self.code = code
+        self.details = details
         super().__init__(ERRORS[code])
 
 
@@ -102,7 +122,7 @@ def verify_key(key, opener=None):
     key = clean_key(key)
     transport = opener or build_opener(NoRedirect())
     headers = {'Authorization': 'Bearer ' + key, 'Accept': 'application/json, text/event-stream',
-               'Content-Type': 'application/json'}
+               'Content-Type': 'application/json', 'User-Agent': USER_AGENT}
 
     def request(method, request_id=None, params=None):
         body = {'jsonrpc': '2.0', 'method': method}
@@ -126,9 +146,24 @@ def verify_key(key, opener=None):
                 raise SetupError('unexpected_response')
             return payload['result']
         except HTTPError as exc:
-            code = 'invalid_key' if exc.code in (401, 403) else 'service_unavailable'
-            exc.close()
-            raise SetupError(code) from None
+            # A gateway rejection is not proof that the API rejected the Key.
+            status = exc.code
+            api_code = None
+            try:
+                payload = json.loads(exc.read(8193))
+                error = payload.get('error') if isinstance(payload, dict) else None
+                if isinstance(error, dict) and isinstance(error.get('code'), str):
+                    api_code = error['code']
+            except (ValueError, OSError, UnicodeError):
+                pass
+            finally:
+                exc.close()
+            code = {
+                (401, 'invalid_api_key'): 'invalid_key',
+                (401, 'api_key_revoked'): 'key_revoked',
+                (403, 'api_account_disabled'): 'account_disabled',
+            }.get((status, api_code), 'access_blocked' if status in (401, 403) else 'service_unavailable')
+            raise SetupError(code, http_status=status, operation=method) from None
         except (URLError, TimeoutError, OSError):
             raise SetupError('network_error') from None
         except (ValueError, TypeError, UnicodeError):
@@ -216,12 +251,27 @@ if ($form.ShowDialog() -ne 'OK') {exit 2}
     return clean_key(result.stdout)
 
 
+def client_profile(client):
+    if client not in CLIENTS:
+        raise SetupError('unsupported_client')
+    return CLIENTS[client]
+
+
+def endpoint(entry):
+    values = [entry[field].rstrip('/') for field in URL_FIELDS
+              if isinstance(entry.get(field), str)]
+    if len(set(values)) > 1:
+        raise SetupError('config_conflict')
+    return values[0] if values else ''
+
+
 def connection_name(client, data):
-    servers = data.get('mcp_servers' if client == 'codex' else 'mcpServers', {})
+    servers = data.get(client_profile(client)[0], {})
     if not isinstance(servers, dict):
         raise SetupError('config_invalid')
     matches = [name for name, entry in servers.items() if isinstance(entry, dict)
-               and isinstance(entry.get('url'), str) and entry['url'].rstrip('/') == ENDPOINT]
+               and any(isinstance(entry.get(field), str) and entry[field].rstrip('/') == ENDPOINT
+                       for field in URL_FIELDS)]
     if len(matches) > 1:
         raise SetupError('ambiguous_connection')
     if 'videotranscriber' in servers:
@@ -229,21 +279,94 @@ def connection_name(client, data):
     return matches[0] if matches else 'videotranscriber'
 
 
+def json_tokens(raw):
+    """Tokenize JSONC without changing positions, including URL-like string contents."""
+    pattern = re.compile(r'\s+|//[^\r\n]*|/\*[\s\S]*?\*/|"(?:[^"\\\r\n]|\\.)*"|[{}\[\],:]|[^\s{}\[\],:"/]+')
+    result = []
+    index = 0
+    while index < len(raw):
+        match = pattern.match(raw, index)
+        if not match:
+            raise ValueError()
+        text = match.group()
+        if not (text.isspace() or text.startswith('//') or text.startswith('/*')):
+            result.append((text, match.start(), match.end()))
+        index = match.end()
+    return result
+
+
+def json_data(raw):
+    tokens = json_tokens(raw or '{}')
+    normalized = ' '.join(text for index, (text, _, _) in enumerate(tokens)
+                          if not (text == ',' and index + 1 < len(tokens) and tokens[index + 1][0] in ('}', ']')))
+    def unique_object(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError()
+            result[key] = value
+        return result
+    return json.loads(normalized, object_pairs_hook=unique_object)
+
+
 def parse_config(client, raw):
     try:
-        data = tomllib.loads(raw) if client == 'codex' else json.loads(raw or '{}')
+        root = client_profile(client)[0]
+        data = tomllib.loads(raw) if client == 'codex' else json_data(raw)
         if not isinstance(data, dict):
             raise ValueError()
-        servers = data.get('mcp_servers' if client == 'codex' else 'mcpServers', {})
+        servers = data.get(root, {})
         name = connection_name(client, data)
         if not isinstance(servers.get(name, {}), dict):
             raise ValueError()
         entry = servers.get(name, {})
-        if entry and entry.get('url', '').rstrip('/') != ENDPOINT:
+        if entry and endpoint(entry) != ENDPOINT:
             raise SetupError('config_conflict')
         return data, entry
     except (ValueError, TypeError, AttributeError):
         raise SetupError('config_invalid') from None
+
+
+def json_text(raw, root, name, entry):
+    """Replace/insert only the chosen server, preserving other JSONC text."""
+    raw = raw if raw.strip() else '{}\n'
+    tokens = json_tokens(raw)
+    def value_end(start):
+        if tokens[start][0] not in ('{', '['):
+            return start + 1
+        depth = 0
+        for index in range(start, len(tokens)):
+            if tokens[index][0] in ('{', '['):
+                depth += 1
+            elif tokens[index][0] in ('}', ']'):
+                depth -= 1
+                if depth == 0:
+                    return index + 1
+        raise SetupError('config_invalid')
+    def members(start):
+        result = {}
+        index = start + 1
+        while tokens[index][0] != '}':
+            key = json.loads(tokens[index][0])
+            end = value_end(index + 2)
+            result[key] = (index + 2, end)
+            index = end + (tokens[end][0] == ',')
+        return result
+    def insert(start, key, value):
+        closing = value_end(start) - 1
+        comma = ',' if members(start) and tokens[closing - 1][0] != ',' else ''
+        position = tokens[closing][1]
+        addition = comma + '\n' + json.dumps(key) + ': ' + json.dumps(value, indent=2, ensure_ascii=False) + '\n'
+        return raw[:position] + addition + raw[position:]
+    top = members(0)
+    if root not in top:
+        return insert(0, root, {name: entry})
+    server_start = top[root][0]
+    servers = members(server_start)
+    if name not in servers:
+        return insert(server_start, name, entry)
+    start, end = servers[name]
+    return raw[:tokens[start][1]] + json.dumps(entry, indent=2, ensure_ascii=False) + raw[tokens[end - 1][2]:]
 
 
 def toml_value(value):
@@ -300,6 +423,7 @@ def codex_text(raw, entry, name):
 
 def new_config(client, raw, key):
     data, existing = parse_config(client, raw)
+    root, url_field, transport = client_profile(client)
     name = connection_name(client, data)
     entry = dict(existing)
     header_field = 'http_headers' if client == 'codex' else 'headers'
@@ -308,7 +432,9 @@ def new_config(client, raw, key):
         raise SetupError('config_invalid')
     headers = {name: value for name, value in headers.items() if name.lower() != 'authorization'}
     headers['Authorization'] = 'Bearer ' + key
-    entry.update({'url': ENDPOINT, header_field: headers})
+    for field in URL_FIELDS:
+        entry.pop(field, None)
+    entry.update({url_field: ENDPOINT, header_field: headers})
     if client == 'codex':
         entry.pop('bearer_token_env_var', None)
         entry.pop('http_headers_helper', None)
@@ -325,10 +451,22 @@ def new_config(client, raw, key):
         if tomllib.loads(result) != expected:
             raise SetupError('config_format')
         return result
-    entry.pop('headersHelper', None)
-    entry['type'] = 'http'
-    data['mcpServers'] = {**data.get('mcpServers', {}), name: entry}
-    return json.dumps(data, indent=2, ensure_ascii=False) + '\n'
+    for field in ('headersHelper', 'http_headers_helper', 'auth', 'oauth', 'authProviderType',
+                  'command', 'args', 'env', 'envFile'):
+        entry.pop(field, None)
+    if transport:
+        entry['type'] = transport
+    else:
+        entry.pop('type', None)
+    if client in ('cline', 'roo-code'):
+        entry['disabled'] = False
+    if client == 'copilot-cli':
+        entry.setdefault('tools', sorted(TOOLS))
+    data[root] = {**data.get(root, {}), name: entry}
+    result = json_text(raw, root, name, entry)
+    if json_data(result) != data:
+        raise SetupError('config_format')
+    return result
 
 
 def private_permissions(path):
@@ -393,7 +531,7 @@ def setup_client(client, path, read_key=read_key, verify=verify_key, replace=Fal
         try:
             verify(key)
         except SetupError as exc:
-            if check or exc.code not in ('invalid_key', 'invalid_input'):
+            if check or exc.code not in ('invalid_key', 'invalid_input', 'key_revoked'):
                 raise
             key = None
         else:
@@ -418,9 +556,78 @@ def setup_client(client, path, read_key=read_key, verify=verify_key, replace=Fal
             'reload_required': True, 'client_connection_verified': False}
 
 
+def default_config(client, home=None, platform=None, environ=None):
+    """Resolve user-scoped files; extensions need an existing, unambiguous file."""
+    client_profile(client)
+    home = Path.home() if home is None else Path(home)
+    platform = sys.platform if platform is None else platform
+    environ = os.environ if environ is None else environ
+    if client == 'codex':
+        return Path(environ.get('CODEX_HOME') or home / '.codex') / 'config.toml'
+    if client == 'claude-code':
+        if environ.get('CLAUDE_CONFIG_DIR'):
+            raise SetupError('custom_config')
+        return home / '.claude.json'
+    if client == 'copilot-cli':
+        return Path(environ.get('COPILOT_HOME') or home / '.copilot') / 'mcp-config.json'
+    if platform == 'darwin':
+        app_root = home / 'Library/Application Support'
+    elif platform == 'win32':
+        app_root = Path(environ.get('APPDATA') or home / 'AppData/Roaming')
+    else:
+        app_root = Path(environ.get('XDG_CONFIG_HOME') or home / '.config')
+    def select_existing(candidates, fallback=None):
+        existing = [path for path in candidates if path.is_file()]
+        if len(existing) > 1 or (not existing and fallback is None):
+            raise SetupError('config_selection_required')
+        return existing[0] if existing else fallback
+    def has_profiles(user):
+        profiles = user / 'profiles'
+        return profiles.is_dir() and any(path.is_dir() for path in profiles.iterdir())
+    if client == 'vscode':
+        if environ.get('VSCODE_PORTABLE'):
+            user = Path(environ['VSCODE_PORTABLE']) / 'user-data/User'
+            if has_profiles(user):
+                raise SetupError('config_selection_required')
+            return user / 'mcp.json'
+        users = [app_root / editor / 'User' for editor in ('Code', 'Code - Insiders')]
+        if sum(user.is_dir() for user in users) > 1 or any(has_profiles(user) for user in users):
+            raise SetupError('config_selection_required')
+        candidates = [user / 'mcp.json' for user in users]
+        installed = [user for user in users if user.is_dir()]
+        fallback = (installed[0] if installed else app_root / 'Code/User') / 'mcp.json'
+        return select_existing(candidates, fallback)
+    if client == 'windsurf':
+        legacy = home / '.codeium/windsurf/mcp_config.json'
+        devin_root = app_root if platform == 'win32' else Path(environ.get('XDG_CONFIG_HOME') or home / '.config')
+        relocated = devin_root / 'devin/mcp_config.json'
+        if legacy.parent.is_dir() and relocated.parent.is_dir():
+            raise SetupError('config_selection_required')
+        return select_existing([legacy, relocated], relocated if relocated.parent.is_dir() else legacy)
+    if client in ('cline', 'roo-code'):
+        if client == 'cline' and environ.get('CLINE_MCP_SETTINGS_PATH'):
+            return Path(environ['CLINE_MCP_SETTINGS_PATH']).expanduser()
+        extension, filename = ('saoudrizwan.claude-dev', 'cline_mcp_settings.json') if client == 'cline' else ('rooveterinaryinc.roo-cline', 'mcp_settings.json')
+        users = [app_root / editor / 'User' for editor in ('Code', 'Code - Insiders', 'Cursor', 'Windsurf', 'VSCodium')]
+        if sum(user.is_dir() for user in users) > 1 or any(has_profiles(user) for user in users):
+            raise SetupError('config_selection_required')
+        candidates = [user / 'globalStorage' / extension / 'settings' / filename for user in users]
+        if client == 'cline':
+            cli = home / '.cline/data/settings/cline_mcp_settings.json'
+            if cli.is_file() and any(user.is_dir() for user in users):
+                raise SetupError('config_selection_required')
+            candidates.append(cli)
+        return select_existing(candidates)
+    return home / {
+        'workbuddy': '.workbuddy/mcp.json',
+        'cursor': '.cursor/mcp.json',
+        'gemini-cli': '.gemini/settings.json',
+    }[client]
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--client', required=True, choices=('codex', 'claude-code'))
+    parser.add_argument('--client', required=True, choices=tuple(CLIENTS))
     parser.add_argument('--input', default='auto', choices=('auto', 'terminal', 'env'))
     parser.add_argument('--language', choices=('en', 'zh'), default='en')
     parser.add_argument('--config', type=Path, help='Explicit user configuration path for custom profiles')
@@ -430,19 +637,15 @@ def main():
     try:
         if args.config:
             path = args.config.expanduser()
-        elif args.client == 'codex':
-            path = Path(os.environ.get('CODEX_HOME', str(Path.home() / '.codex'))) / 'config.toml'
-        elif os.environ.get('CLAUDE_CONFIG_DIR'):
-            raise SetupError('custom_config')
         else:
-            path = Path.home() / '.claude.json'
+            path = default_config(args.client)
         result = setup_client(args.client, path, read_key=lambda: read_key(args.input, args.language),
                               replace=args.replace, check=args.check)
         result['client'] = args.client
         print(json.dumps(result))
         return 0
     except SetupError as exc:
-        print(json.dumps({'status': 'error', 'code': exc.code, 'message': str(exc)}))
+        print(json.dumps({'status': 'error', 'code': exc.code, 'message': str(exc), **exc.details}))
     except KeyboardInterrupt:
         print(json.dumps({'status': 'error', 'code': 'cancelled', 'message': ERRORS['cancelled']}))
     except Exception:
