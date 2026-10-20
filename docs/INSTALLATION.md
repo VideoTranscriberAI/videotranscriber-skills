@@ -37,6 +37,18 @@ cp -R videotranscriber-skills/skills/transcript-insights ~/.claude/skills/
 
 Standalone installation does not load the Claude plugin's bundled MCP or credential form. Use the [client connection steps](../skills/setup-videotranscriber/references/clients.md).
 
+## Other local clients
+
+The setup helper has adapters for Cursor, WorkBuddy, Windsurf/Cascade, Gemini CLI, GitHub Copilot CLI, VS Code, Cline, and Roo Code. Install all three Skills in a location the active host actually discovers; do not assume a Codex/Claude plugin is installed in another host. For supported clients, the Skills CLI route above can select the target Agent.
+
+Then use ordinary language, such as “Help me turn this video into learning notes: URL.” Setup runs automatically if the transcription tools are missing. A supported local helper opens private input, validates the Key, and saves that client's user connection. The Agent should handle script paths, client arguments, and profile selection. See [client-specific setup](../skills/setup-videotranscriber/references/local-setup.md).
+
+## Updating existing Skills
+
+Some installers skip an existing directory instead of upgrading it. When updating, compare the installed copy with the intended repository revision, preserve any local changes, and replace all three Skills consistently. Check user, project, and plugin installations for duplicate names. Start a fresh conversation; restart the client if discovery remains stale. Installing one missing Skill does not establish that the existing two were updated.
+
+For first-use acceptance, remove only this service's connection and installed Skills with the user's authorization, then reinstall from the intended revision. Do not wipe the client's complete configuration. See [client acceptance](CLIENT_TESTING.md).
+
 ## Project installation
 
 Copy a selected Skill directory under the host's project Skills path, such as `.agents/skills/` for Codex or `.claude/skills/` for Claude Code. Keep credentials out of the project and version control. User-wide plugin installation is the recommended beginner route.

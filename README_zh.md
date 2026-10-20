@@ -43,9 +43,17 @@ codex plugin add videotranscriber-skills@video-transcriber-ai
 
 ### WorkBuddy
 
-通过 **技能 → 添加技能 → 上传技能** 导入各 Skill 的 ZIP 包，然后说“帮我连接 Video Transcriber”，按引导添加自定义 MCP。详见 [WorkBuddy 安装与打包说明](docs/WORKBUDDY.md)。
+通过 **技能 → 添加技能 → 上传技能** 导入各 Skill 的 ZIP 包，然后说“帮我连接 Video Transcriber”。接入 Skill 会打开本地隐藏输入框，验证 Key 后保存 WorkBuddy 用户级 MCP 配置。详见 [WorkBuddy 安装与打包说明](docs/WORKBUDDY.md)。
 
 仓库也提供带本地 Key 表单的 Token 连接器配置。进入连接器市场需要经过 WorkBuddy 审核；本仓库不代表连接器已上架。目标客户端的安装体验仍需实机验证。
+
+### Cursor、Windsurf、Gemini CLI、Copilot、VS Code、Cline、Roo Code
+
+按客户端支持的 Skill 安装方式安装本仓库的三个标准 Skill，也可以让 Agent 安装此仓库。支持 Skills CLI 的客户端可参考[高级安装说明](docs/INSTALLATION.md)。安装后直接描述视频任务，或说“帮我连接 Video Transcriber”。
+
+接入 Skill 会按当前客户端启动同一套本地配置助手。你在隐藏输入框粘贴一次 Key，助手验证后保存该客户端的用户配置。遇到编辑器自定义 Profile，Agent 会先定位实际使用的用户 MCP 配置。客户端需要允许执行本地脚本；无法打开窗口时，使用原生凭证表单或用户终端隐藏输入。
+
+各配置格式已覆盖自动化测试；Skill 识别、实际弹窗和连接刷新需要逐个客户端验收。查看[支持的客户端与配置位置](skills/setup-videotranscriber/references/local-setup.md)及[统一测试清单](docs/CLIENT_TESTING.md)。
 
 ## 直接用自然语言
 

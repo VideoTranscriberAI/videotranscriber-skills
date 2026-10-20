@@ -121,11 +121,11 @@ Rules:
 - Keep transcription tool usage in `transcribe-media` rather than copying it into analysis Skills.
 - Pass the resulting transcript into existing analysis workflows.
 - Keep transcript-only usage available when the MCP connection is absent.
-- Store credentials in environment variables or host secrets, never in Skill files.
+- Store credentials in the chosen client’s user configuration with restricted permissions or its native credential store, never in Skill/repository files. Environment variables are an explicit advanced option.
 - Define success, failure, timeout, retry, cancellation, polling limits, and terminal-state handling.
 - Do not claim an API, MCP server, or tool exists until its implementation and packaging are present.
 
-The MCP connection is configured by the host client. The setup Skill guides client-specific credential entry and verifies fresh authenticated tool discovery without creating a task. The public Skills and packages contain no user's API Key.
+The MCP connection is configured by the host client. The setup Skill uses one local private-input and discovery implementation with client-specific configuration adapters. It covers Codex, Claude Code, WorkBuddy, Cursor, Windsurf/Cascade, Gemini CLI, GitHub Copilot CLI, VS Code, Cline, and Roo Code. JSONC/TOML edits preserve unrelated settings, and ambiguous user profiles require selecting the active file before input. Discovery uses an explicit client User-Agent and distinguishes recognized API authentication errors from gateway rejections. The public Skills and packages contain no user's API Key.
 
 The Codex manifest exposes the canonical Skills; setup guides the client-owned connection and credential. The Claude manifest supplies its own sensitive credential field and MCP mapping. WorkBuddy metadata lives under `integrations/workbuddy/`; the builder reads canonical Skills to create upload or connector archives without maintaining duplicate implementations.
 
@@ -147,7 +147,7 @@ Generic site audits, Core Web Vitals, sitemap checks, Search Console analysis, c
 
 ## Compatibility
 
-Primary supported hosts are Codex and Claude Code. Canonical Skills should also follow the open Agent Skills structure so other compatible agents can discover them.
+Codex and Claude Code have dedicated plugin manifests; WorkBuddy has canonical Skill ZIPs and a Token connector adapter. Other supported local clients use standard Skills plus configuration adapters. Adapter tests verify formats and file handling; client-level discovery, input, and reload behavior is accepted separately using [CLIENT_TESTING](CLIENT_TESTING.md).
 
 Platform-specific features must:
 

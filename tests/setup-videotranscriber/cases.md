@@ -4,7 +4,7 @@
 
 “帮我连接 Video Transcriber” leads to the current client's connection steps. Only ask the client name if it cannot be discovered. Explain the separate API balance, provide the official site and API console navigation, and direct credential entry into local client settings. Do not stop at “configure MCP”, request a Key in chat, or submit a test transcription.
 
-For local Codex and Claude Code, launch the installed `scripts/configure_client.py` for the detected host. Explain that the user pastes once in the hidden local input and that the Key is saved in the client user config as restricted plaintext. Do not ask a beginner to choose environment-variable syntax or reply only with a documentation link. `VS_API_KEY` remains an explicit advanced choice.
+For each supported local client, launch the installed `scripts/configure_client.py` with the matching client argument. Resolve an ambiguous editor/user profile before prompting. Explain that the user pastes once in the hidden local input and that the Key is saved in the client user config as restricted plaintext. Do not ask a beginner to choose environment-variable syntax or reply only with a documentation link. `VS_API_KEY` remains an explicit advanced choice.
 
 ## Existing connection
 
@@ -33,3 +33,11 @@ Pasted SRT or the first-run text demo is analyzed without requiring an API Key. 
 ## Resume original intent
 
 After an originally requested public-video summary has its connection verified, continue the original transcription-and-analysis request. A setup-only request does not authorize a paid demo. Existing pending tasks are resumed with their original ID, never recreated.
+
+## Gateway rejection and disabled account
+
+A gateway returns 403 with HTML or non-API JSON. Expected: `access_blocked`, preserve the previous config, and give a network/access-policy next step without requesting another Key. A recognized `api_account_disabled` is an account-status problem. Only recognized `invalid_api_key` / `api_key_revoked` responses justify credential replacement. Never echo the response body or secret.
+
+## Client formats and profiles
+
+Run setup against isolated user files for each supported client. Verify its root map, URL field and transport type, preservation of sibling servers/settings/comments, restricted file permissions, and no paid tool call. VS Code uses `servers`, Gemini Streamable HTTP uses `httpUrl`, Windsurf uses `serverUrl`, WorkBuddy/Cline use `streamableHttp`, and Roo uses `streamable-http`. Multiple editor/profile files require choosing the active user config before input. Never write a Key into a project config to make a test pass.
