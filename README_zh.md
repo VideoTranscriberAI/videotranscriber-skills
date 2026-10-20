@@ -28,7 +28,7 @@ codex plugin add videotranscriber-skills@video-transcriber-ai
 
 添加 Marketplace 后，也可在桌面端 **Plugins Directory → Video Transcriber AI → Video Transcriber AI Skills** 中安装。打开新对话，告诉 AI“帮我连接 Video Transcriber”。
 
-接入 Skill 会启动本地配置助手。你在隐藏输入框粘贴一次 Key，助手校验后保存连接配置，再引导刷新连接并继续原任务。Key 以明文保存在本机用户配置中，并限制文件权限；重启后无需再次填写。助手需要 Python 3.11+；无法打开本地窗口时会提供用户终端中的隐藏输入方式，详见[本地配置说明](skills/setup-videotranscriber/references/local-setup.md)。安装插件不会自动提供 Key。这里针对本地 Codex／插件接入路径；其他 ChatGPT 入口按其自身连接要求接入。
+接入 Skill 会启动本地配置助手。你在隐藏输入框粘贴一次 Key，助手校验后保存连接配置，先检查当前工具是否可用，可用就继续原任务；客户端尚未加载连接时才引导刷新。临时验证失败会在同一进程内有限重试，无需立即重新粘贴。Key 以明文保存在本机用户配置中，并限制文件权限；重启后无需再次填写。助手需要 Python 3.11+；无法打开本地窗口时会提供用户终端中的隐藏输入方式，详见[本地配置说明](skills/setup-videotranscriber/references/local-setup.md)。安装插件不会自动提供 Key。这里针对本地 Codex／插件接入路径；其他 ChatGPT 入口按其自身连接要求接入。
 
 ### Claude Code
 
@@ -39,7 +39,7 @@ codex plugin add videotranscriber-skills@video-transcriber-ai
 /plugin install videotranscriber-skills@video-transcriber-ai
 ```
 
-启用插件后，说“帮我连接 Video Transcriber”。有原生 **Video Transcriber API Key** 输入框时直接填写；没有时，接入 Skill 启动同一套[本地配置助手](skills/setup-videotranscriber/references/local-setup.md)，写入 Claude Code 用户配置并引导刷新连接。只分析已有文字时无需填写 Key。环境变量等高级方式见[客户端配置说明](skills/setup-videotranscriber/references/clients.md)。
+启用插件后，说“帮我连接 Video Transcriber”。有原生 **Video Transcriber API Key** 输入框时直接填写；没有时，接入 Skill 启动同一套[本地配置助手](skills/setup-videotranscriber/references/local-setup.md)，写入 Claude Code 用户配置后检查工具并继续任务，未加载时才引导重连。只分析已有文字时无需填写 Key。环境变量等高级方式见[客户端配置说明](skills/setup-videotranscriber/references/clients.md)。
 
 ### WorkBuddy
 

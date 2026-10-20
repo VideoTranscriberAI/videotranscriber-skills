@@ -60,7 +60,8 @@ url = "https://other.invalid/mcp"
         self.assertEqual(entry['tool_timeout_sec'], 90)
         self.assertEqual(parsed['mcp_servers']['other']['url'], 'https://other.invalid/mcp')
         self.assertIn('# keep this comment', content)
-        self.assertTrue(result['reload_required'])
+        self.assertIsNone(result['reload_required'])
+        self.assertEqual(result['next_action'], 'discover_client_tools')
         self.assertFalse(result['client_connection_verified'])
         self.assertNotIn(KEY, json.dumps(result))
         if os.name != 'nt':

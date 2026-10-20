@@ -27,7 +27,7 @@ The example assumes the Skill directory is the working directory. In actual tool
 
 `--language en` selects English. `--input auto` opens a hidden macOS system dialog, a masked Windows dialog, or Zenity on Linux when available. The same input mechanism is shared across these clients; the client must allow local process execution and the OS must allow the dialog. Client transport/configuration support has automated coverage; real application behavior must be accepted in each installed client.
 
-Before launch, tell the user: obtain their Key in the official API console, paste it once into the local window, then click Connect. Explain that it is stored in the selected client's local plaintext user configuration with restricted file permissions. Retain the original URL, requested output, and existing task ID.
+Before launch, resolve known host network and user-config write permission requirements. The helper checks local write access before opening private input; a permission error should be handled before asking for another Key. Tell the user: obtain their Key in the official API console, paste it once into the local window, then click Connect. Explain that it is stored in the selected client's local plaintext user configuration with restricted file permissions. Retain the original URL, requested output, and existing task ID.
 
 ## Choose the real profile
 
@@ -45,13 +45,18 @@ Before launch, tell the user: obtain their Key in the official API console, past
 - JSON/JSONC edits preserve unrelated text, comments, settings, and server entries. TOML edits preserve unrelated configuration. Unsupported or conflicting layouts stop before credential entry. Cancellation, invalid credentials, network failure, and concurrent edits preserve the original file. Permissions are POSIX `0600` or an explicit current-user Windows ACL. This is plaintext local storage, not an encrypted vault or a shared credential service across Agents.
 - Validation sends credentials only to `https://videotranscriber.ai/mcp`, with TLS verification and no redirects. It uses initialize → initialized notification → tools/list; no paid task is created. A successful check does not prove sufficient API Quota.
 - `invalid_key` and `key_revoked` come from recognized API authentication errors. `account_disabled` requires an account-status remedy. `access_blocked` means an unrecognized 401/403, such as a gateway rejection: do not tell the user to create a new Key. Safe error output includes HTTP status and failed operation, never the server's raw body or a credential.
+- Validation errors include safe operation/HTTP/content-type or parser-stage metadata when available. Transient failures are retried in the same process, without another paste; permissions, gateway policy, and explicit authentication failures require their own remedy.
 - Do not print configuration, environment values, raw HTTP exceptions, or shell tracing. Never pass a secret as `--key`, a command argument, chat input, or a repository file. Advanced `--input env` reads `VS_API_KEY` locally without printing it.
 
-## Results and refresh
+## Continue after validation
 
-`awaiting_key` means use the local input. Yield tool output while a dialog remains open; it times out after five minutes. Do not open overlapping dialogs.
+`awaiting_key` means use the local input. Yield tool output while a dialog remains open; it times out after five minutes. `retrying_verification` means the same process is retaining the Key only in memory and retrying discovery, at most twice with bounded backoff. Wait for its final status instead of launching another input. Cancellation, invalid/revoked Key, account/access/permission errors, and non-retryable HTTP statuses are not automatically retried. Server-requested backoff is honored; a delay over 30 seconds is reported without an early automatic retry. The Key is never saved merely to enable a retry.
 
-`credential_verified` proves authenticated discovery accepted the Key. `configuration_saved: true` plus `reload_required: true` means the local file changed. `client_connection_verified: false` means the running Agent still needs to load the saved connection.
+`credential_verified` proves authenticated discovery accepted the Key. `configuration_saved: true` means only that the local file changed. `next_action: discover_client_tools` directs the Agent to check current host discovery/status. `client_connection_verified: false` means the helper has not inspected the host; it does not prove that the host needs refreshing. The compatibility field `reload_required` is `null` after a write because runtime reload requirements are unknown, and `false` when this check changed no configuration. Neither value is a reason to force a manual restart.
+
+First re-discover `create_transcription`, `get_transcription`, and `get_transcription_result` in the active host. If the tools are now available, continue the original request in the same conversation. If unavailable and a supported host reload action exists, use it and check again. If no such action exists or tools still cannot load, give one concrete manual refresh/restart step. Retain the original URL/task ID throughout. Connection checks do not create paid tasks.
+
+The following actions are fallbacks for a client that has not loaded the connection, not mandatory setup steps:
 
 | Client | Refresh/check |
 | --- | --- |
@@ -65,7 +70,7 @@ Before launch, tell the user: obtain their Key in the official API console, past
 | VS Code | `MCP: List Servers`, select the server and restart; confirm tools in the active harness |
 | Cline / Roo Code | Reconnect/restart this server in the MCP Servers panel; check tool discovery |
 
-Inspect the actual client controls before describing a specific button. Do not claim to reload a client unless the host performed it. After refresh, verify fresh discovery exposes `create_transcription`, `get_transcription`, and `get_transcription_result`. Preserve the original URL/task ID and continue the requested task. If a new conversation is needed, give a short resume message containing only the public URL/request or task ID.
+Inspect the actual client controls before describing a specific fallback button. Do not claim to reload a client unless the host performed it. If a reload was needed, verify fresh discovery exposes `create_transcription`, `get_transcription`, and `get_transcription_result`. Preserve the original URL/task ID and continue the requested task. If a new conversation is needed, give a short resume message containing only the public URL/request or task ID.
 
 ## When a private input window is unavailable
 

@@ -1,12 +1,20 @@
 # Release Notes
 
-## Unreleased — v0.4.0
+## Unreleased — v0.4.1
+
+- Continue the original task immediately when the host has loaded MCP tools; manual connection refresh/restart is a fallback instead of a mandatory setup step. Saved configuration no longer reports that a manual reload is required.
+- Retry temporary network/service/discovery failures up to twice within the same process using one private Key input. Honor bounded service backoff; stop on permanent auth/account/gateway/permission failures. Preserve original configuration on failure.
+- Check user-config write access before private input and include safe operation/response-stage diagnostics for verification failures.
+
+Package manifests use 0.4.1. This entry does not indicate a tagged or published release.
+
+## v0.4.0
 
 - Extend one-paste local setup to WorkBuddy, Cursor, Windsurf/Cascade, Gemini CLI, GitHub Copilot CLI, VS Code, Cline, and Roo Code, alongside Codex and Claude Code. Preserve JSONC comments and unrelated connections; resolve existing editor profiles before input.
 - Identify discovery requests to production gateways and distinguish gateway/access-policy rejection, invalid/revoked Key, and disabled account. A generic HTTP 401/403 no longer tells users to replace a valid Key.
 - Add configuration/gateway regression tests and a shared client acceptance checklist. Application-level verification is required per client; automated adapters do not claim completed UI testing.
 
-Package manifests use 0.4.0. This entry does not indicate a tagged or published release.
+These changes were packaged as 0.4.0; package versions do not establish a tagged or published release.
 
 ## v0.3.1
 

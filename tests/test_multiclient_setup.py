@@ -44,7 +44,8 @@ class MultiClientTests(unittest.TestCase):
                 self.assertEqual(entry['headers']['Authorization'], 'Bearer ' + KEY)
                 self.assertEqual(entry.get('type'), transport)
                 self.assertFalse(result['client_connection_verified'])
-                self.assertTrue(result['reload_required'])
+                self.assertIsNone(result['reload_required'])
+                self.assertEqual(result['next_action'], 'discover_client_tools')
                 if client in ('cline', 'roo-code'):
                     self.assertIs(entry['disabled'], False)
                 if client == 'copilot-cli':

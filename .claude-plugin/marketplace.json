@@ -11,7 +11,7 @@
       "name": "videotranscriber-skills",
       "source": "./",
       "description": "Official media transcription and transcript analysis Skills from Video Transcriber AI.",
-      "version": "0.4.0",
+      "version": "0.4.1",
       "author": {
         "name": "Video Transcriber AI"
       },

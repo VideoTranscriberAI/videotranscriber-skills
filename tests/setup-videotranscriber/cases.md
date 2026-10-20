@@ -10,7 +10,7 @@ For each supported local client, launch the installed `scripts/configure_client.
 
 A healthy connection is reused. A saved entry or cached tool name with no fresh authenticated discovery is reported as configured but unverified. Preserve unrelated settings and the user's chosen account.
 
-When the helper returns `credential_verified` with `client_connection_verified: false`, report Key verification separately from active client readiness. Give the actual refresh step, preserve the original media request/task ID, and confirm fresh host discovery before resuming. Do not make the user paste a saved valid Key again after restart.
+When the helper returns `credential_verified`, discover the current host tools first. If the three tools are now available, continue the original media request immediately without a user refresh or restart. `client_connection_verified: false` means the helper did not inspect the host, not that a reload is required. Use a real host reload capability if discovery is still missing; manual refresh is only the final fallback. Preserve the URL/task ID and reuse the saved valid Key.
 
 ## Missing client capabilities
 
@@ -41,3 +41,7 @@ A gateway returns 403 with HTML or non-API JSON. Expected: `access_blocked`, pre
 ## Client formats and profiles
 
 Run setup against isolated user files for each supported client. Verify its root map, URL field and transport type, preservation of sibling servers/settings/comments, restricted file permissions, and no paid tool call. VS Code uses `servers`, Gemini Streamable HTTP uses `httpUrl`, Windsurf uses `serverUrl`, WorkBuddy/Cline use `streamableHttp`, and Roo uses `streamable-http`. Multiple editor/profile files require choosing the active user config before input. Never write a Key into a project config to make a test pass.
+
+## One paste across transient verification errors
+
+Inject a network failure and an unexpected discovery response, then success. Expected: one credential read, at most three verification attempts in the same process, no unvalidated credential written, safe progress metadata, then save on success. Exhaustion preserves the original file. Cancellation and explicit auth/account/gateway/permission errors stop without automatic replacement. Known write/runner permission failures are resolved before opening private input.
