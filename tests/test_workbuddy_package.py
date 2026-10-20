@@ -27,6 +27,9 @@ class WorkBuddyPackageTests(unittest.TestCase):
                 self.assertIn("references/clients.md", archive.namelist())
                 self.assertEqual(archive.read("scripts/configure_client.py"),
                                  (ROOT / "skills/setup-videotranscriber/scripts/configure_client.py").read_bytes())
+                for script in ("mcp_transport.py", "call_mcp.py"):
+                    self.assertEqual(archive.read("scripts/" + script),
+                        (ROOT / "skills/setup-videotranscriber/scripts" / script).read_bytes())
                 self.assertNotIn("connector-meta.json", archive.namelist())
 
     def test_archive_contains_canonical_skills_and_matching_credential_form(self):

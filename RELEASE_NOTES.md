@@ -1,12 +1,20 @@
 # Release Notes
 
-## Unreleased — v0.4.1
+## Unreleased — v0.4.2
+
+- Continue authorized transcription through a packaged official MCP caller when the host has not loaded native tools. Reuse saved credentials, task IDs, and exact creation arguments; no mandatory client restart or ad hoc HTTP script.
+- Prefer installed curl with credentials piped through stdin, verified TLS and no redirects. Collect Python short reads and reject incomplete responses. Retain one credential input across bounded verification retries.
+- Preserve long results in a new private JSON file, redact credentials and omit download links by default, and report tool/API errors separately from transport failures.
+
+Package manifests use 0.4.2. This entry does not indicate a tagged or published release.
+
+## v0.4.1
 
 - Continue the original task immediately when the host has loaded MCP tools; manual connection refresh/restart is a fallback instead of a mandatory setup step. Saved configuration no longer reports that a manual reload is required.
 - Retry temporary network/service/discovery failures up to twice within the same process using one private Key input. Honor bounded service backoff; stop on permanent auth/account/gateway/permission failures. Preserve original configuration on failure.
 - Check user-config write access before private input and include safe operation/response-stage diagnostics for verification failures.
 
-Package manifests use 0.4.1. This entry does not indicate a tagged or published release.
+These changes were packaged as 0.4.1; package versions do not establish a tagged or published release.
 
 ## v0.4.0
 

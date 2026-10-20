@@ -43,7 +43,7 @@ Before launch, resolve known host network and user-config write permission requi
 - Codex stores `mcp_servers.<name>.http_headers.Authorization`; JSON clients store `headers.Authorization` in their client-specific server map. Transport fields differ: Windsurf uses `serverUrl`, Gemini CLI uses `httpUrl`, VS Code uses `servers`, and Cline/Roo/WorkBuddy have explicit transport types. The helper handles these differences.
 - Existing healthy credentials and uniquely matching connection names are reused. A usable Codex environment reference can be migrated without another paste. `--replace` prompts for one new Key; `--check` checks the saved credential without prompting or writing.
 - JSON/JSONC edits preserve unrelated text, comments, settings, and server entries. TOML edits preserve unrelated configuration. Unsupported or conflicting layouts stop before credential entry. Cancellation, invalid credentials, network failure, and concurrent edits preserve the original file. Permissions are POSIX `0600` or an explicit current-user Windows ACL. This is plaintext local storage, not an encrypted vault or a shared credential service across Agents.
-- Validation sends credentials only to `https://videotranscriber.ai/mcp`, with TLS verification and no redirects. It uses initialize → initialized notification → tools/list; no paid task is created. A successful check does not prove sufficient API Quota.
+- Validation sends credentials only to `https://videotranscriber.ai/mcp`, with TLS verification and no redirects. It uses initialize → initialized notification → tools/list; no paid task is created. A successful check does not prove sufficient API Quota. Transport `auto` prefers an installed curl; otherwise it uses Python's standard HTTP client. No dependency is installed. Curl receives headers and request data through private stdin, with user curl configuration disabled; response data uses an automatically removed private temporary file. Python collects short reads and checks advertised response length. Advanced diagnostics may select `--transport curl` or `--transport urllib` without changing the credential.
 - `invalid_key` and `key_revoked` come from recognized API authentication errors. `account_disabled` requires an account-status remedy. `access_blocked` means an unrecognized 401/403, such as a gateway rejection: do not tell the user to create a new Key. Safe error output includes HTTP status and failed operation, never the server's raw body or a credential.
 - Validation errors include safe operation/HTTP/content-type or parser-stage metadata when available. Transient failures are retried in the same process, without another paste; permissions, gateway policy, and explicit authentication failures require their own remedy.
 - Do not print configuration, environment values, raw HTTP exceptions, or shell tracing. Never pass a secret as `--key`, a command argument, chat input, or a repository file. Advanced `--input env` reads `VS_API_KEY` locally without printing it.
@@ -54,9 +54,27 @@ Before launch, resolve known host network and user-config write permission requi
 
 `credential_verified` proves authenticated discovery accepted the Key. `configuration_saved: true` means only that the local file changed. `next_action: discover_client_tools` directs the Agent to check current host discovery/status. `client_connection_verified: false` means the helper has not inspected the host; it does not prove that the host needs refreshing. The compatibility field `reload_required` is `null` after a write because runtime reload requirements are unknown, and `false` when this check changed no configuration. Neither value is a reason to force a manual restart.
 
-First re-discover `create_transcription`, `get_transcription`, and `get_transcription_result` in the active host. If the tools are now available, continue the original request in the same conversation. If unavailable and a supported host reload action exists, use it and check again. If no such action exists or tools still cannot load, give one concrete manual refresh/restart step. Retain the original URL/task ID throughout. Connection checks do not create paid tasks.
+First re-discover `create_transcription`, `get_transcription`, and `get_transcription_result` in the active host. If available, continue the original request. A real supported host reload API may load missing native tools; do not try to operate Codex's own window through Computer Use. If native tools remain unavailable, continue through the packaged caller below, using the same official MCP endpoint and saved credential. Retain the original URL/task ID. Connection checks do not create paid tasks.
 
-The following actions are fallbacks for a client that has not loaded the connection, not mandatory setup steps:
+## Same-session tool calls
+
+Use `scripts/call_mcp.py` from this installed Skill, with the active `--client` and the same `--config` if a custom profile was selected. It reads the saved Key locally, performs authenticated discovery, and calls only `create_transcription`, `get_transcription`, or `get_transcription_result`. It does not prompt for another Key or modify client configuration. This is a direct MCP client, not native host tool registration; explain that distinction only if needed. Do not invent a host reload tool or write a replacement network script.
+
+The Agent runs the command; the user only supplies their media request:
+
+```text
+python3 /absolute/installed/setup-videotranscriber/scripts/call_mcp.py --client CLIENT --tool TOOL --arguments 'ACTUAL_JSON_ARGUMENTS'
+```
+
+Replace every placeholder before execution. The JSON contains only the tool arguments from the connected contract, never credentials. For creation, generate and retain the actual idempotency key before the first call; reuse the identical JSON on retries or native/caller handoff. For either lookup, use the retained `request_id`. The same process makes at most two automatic transport retries with unchanged arguments and RPC ID. It honors bounded backoff and rejects redirects. Validation/auth/quota/idempotency errors require their specific remedy, never a new creation key.
+
+The caller emits JSON with `status`, `tool`, safe `http_status`/`retry_after`, and the normalized API payload under `result`. `status: completed` only means the operation returned; `result.status` is the transcription state. `status: tool_error` (exit 2) contains the API/tool error. Connection or local errors use `status: error` (exit 1). While `retrying_verification` or `retrying_mcp_call` appears, wait on that process instead of launching a new caller or Key dialog.
+
+For `get_transcription_result`, supply `--output /absolute/new/private-result.json` to preserve a long result without tool-output truncation, then read that file for the requested analysis. Existing files are preserved. Results are bounded to 16 MiB; incomplete/oversized content is reported instead of presented as complete. Download URLs are omitted by default; use `--include-download-links` only for an explicit subtitle/download request, and keep them out of diagnostic logs. Apply the normal `transcribe-media` polling budget and terminal-state rules. No task is created merely to check this path.
+
+## Manual client refresh fallback
+
+If neither native tools nor the packaged caller can be used, explain the actual blocker and give one relevant remedy. The following manual actions apply when refreshing native registration is the chosen remedy; they are not required before using the caller:
 
 | Client | Refresh/check |
 | --- | --- |
