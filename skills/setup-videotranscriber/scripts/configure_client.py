@@ -9,6 +9,8 @@ import argparse
 import csv
 from email.utils import parsedate_to_datetime
 import getpass
+from http.client import IncompleteRead
+import importlib.util
 import io
 import json
 from math import ceil
@@ -31,8 +33,13 @@ except ModuleNotFoundError:
     raise SystemExit(1)
 
 
+_transport_spec = importlib.util.spec_from_file_location(
+    'videotranscriber_transport', Path(__file__).with_name('mcp_transport.py'))
+_transport = importlib.util.module_from_spec(_transport_spec)
+_transport_spec.loader.exec_module(_transport)
+
 ENDPOINT = 'https://videotranscriber.ai/mcp'
-USER_AGENT = 'VideoTranscriber-Local-Setup/0.4.1'
+USER_AGENT = 'VideoTranscriber-Local-Setup/0.4.2'
 TOOLS = {'create_transcription', 'get_transcription', 'get_transcription_result'}
 CLIENTS = {
     'codex': ('mcp_servers', 'url', None),
@@ -71,6 +78,10 @@ ERRORS = {
     'unsupported_client': 'This client is not supported by this helper. Use its native MCP credential settings.',
     'permission_failed': 'Private file permissions could not be set; no new configuration was saved.',
     'permission_required': 'Allow the helper network and user-config access before opening private input again.',
+    'invalid_arguments': 'Use the supported tool arguments and retain the original idempotency_key.',
+    'rpc_error': 'The MCP service rejected this operation; inspect the safe RPC code.',
+    'output_exists': 'Choose a new result file; the existing file was preserved.',
+    'response_too_large': 'The response exceeds the local size limit; use native tools or a smaller result.',
     'io_error': 'The local configuration could not be saved; check filesystem permissions.',
 }
 
@@ -94,21 +105,23 @@ def clean_key(value):
     return value
 
 
-def response_payload(response, request_id):
+def response_payload(response, request_id, max_bytes=262144):
     if 'text/event-stream' not in response.headers.get('Content-Type', '').lower():
-        raw = response.read(262145)
-        if not raw or len(raw) > 262144:
+        raw = _transport.read_complete(response, max_bytes)
+        if not raw:
             raise SetupError('unexpected_response')
         return json.loads(raw)
     # A valid SSE connection can remain open. Stop after this request's event.
     total = 0
     data = []
     deadline = time.monotonic() + 10
-    while total < 262144 and time.monotonic() < deadline:
-        line = response.readline(262145 - total)
+    while total < max_bytes and time.monotonic() < deadline:
+        line = response.readline(max_bytes + 1 - total)
         if not line:
             break
         total += len(line)
+        if total > max_bytes:
+            raise _transport.ResponseTooLarge()
         line = line.decode('utf-8').rstrip('\r\n')
         if line.startswith('data:'):
             data.append(line[5:].lstrip(' '))
@@ -120,10 +133,10 @@ def response_payload(response, request_id):
     raise SetupError('unexpected_response')
 
 
-def verify_key(key, opener=None):
-    """Use authenticated MCP initialization and tool discovery, never tools/call."""
+def mcp_connection(key, opener=None, transport='auto', max_bytes=262144, timeout=10):
+    """Initialize the official MCP endpoint; return an authenticated RPC function."""
     key = clean_key(key)
-    transport = opener or build_opener(NoRedirect())
+    transport = opener or _transport.default_opener(transport, lambda: build_opener(NoRedirect()))
     headers = {'Authorization': 'Bearer ' + key, 'Accept': 'application/json, text/event-stream',
                'Content-Type': 'application/json', 'User-Agent': USER_AGENT}
 
@@ -136,7 +149,7 @@ def verify_key(key, opener=None):
         req = Request(ENDPOINT, data=json.dumps(body).encode(), headers=headers, method='POST')
         details = {'operation': method}
         try:
-            with transport.open(req, timeout=10) as response:
+            with transport.open(req, timeout=timeout) as response:
                 status = getattr(response, 'status', None)
                 if isinstance(status, int):
                     details['http_status'] = status
@@ -150,17 +163,22 @@ def verify_key(key, opener=None):
                     headers['Mcp-Session-Id'] = session
                 if request_id is None:
                     return None
-                payload = response_payload(response, request_id)
+                payload = response_payload(response, request_id, max_bytes)
             if (not isinstance(payload, dict) or payload.get('id') != request_id
                     or not isinstance(payload.get('result'), dict) or 'error' in payload):
                 error = payload.get('error') if isinstance(payload, dict) else None
                 if isinstance(error, dict) and isinstance(error.get('code'), int):
                     details['rpc_error_code'] = error['code']
+                    if method == 'tools/call':
+                        raise SetupError('rpc_error', **details)
                 raise SetupError('unexpected_response', failure_stage='rpc_envelope')
             return payload['result']
         except HTTPError as exc:
             # A gateway rejection is not proof that the API rejected the Key.
             status = exc.code
+            if 300 <= status < 400:
+                exc.close()
+                raise SetupError('redirect_rejected', operation=method, http_status=status) from None
             api_code = None
             try:
                 payload = json.loads(exc.read(8193))
@@ -196,9 +214,14 @@ def verify_key(key, opener=None):
             raise SetupError(code, **info) from None
         except SetupError as exc:
             raise SetupError(exc.code, **{**details, **exc.details}) from None
-        except (URLError, TimeoutError, OSError) as exc:
+        except _transport.ResponseTooLarge:
+            raise SetupError('response_too_large', **details, max_bytes=max_bytes) from None
+        except (URLError, TimeoutError, OSError, IncompleteRead) as exc:
             code = 'permission_required' if isinstance(exc, PermissionError) or isinstance(
                 getattr(exc, 'reason', None), PermissionError) else 'network_error'
+            curl_code = getattr(exc, 'curl_exit_code', None)
+            if isinstance(curl_code, int):
+                details['curl_exit_code'] = curl_code
             raise SetupError(code, **details, error_type=type(exc).__name__) from None
         except (ValueError, TypeError, UnicodeError) as exc:
             raise SetupError('unexpected_response', **details,
@@ -216,6 +239,12 @@ def verify_key(key, opener=None):
     if not isinstance(tools, list) or not TOOLS.issubset({item.get('name') for item in tools
             if isinstance(item, dict) and isinstance(item.get('name'), str)}):
         raise SetupError('unexpected_response', operation='tools/list', failure_stage='tool_list')
+    return request
+
+
+def verify_key(key, opener=None, transport='auto'):
+    """Authenticated MCP discovery only; never create a transcription."""
+    mcp_connection(key, opener=opener, transport=transport)
 
 
 def read_key(source='auto', language='en'):
@@ -708,6 +737,7 @@ def main():
     parser.add_argument('--client', required=True, choices=tuple(CLIENTS))
     parser.add_argument('--input', default='auto', choices=('auto', 'terminal', 'env'))
     parser.add_argument('--language', choices=('en', 'zh'), default='en')
+    parser.add_argument('--transport', choices=('auto', 'curl', 'urllib'), default='auto')
     parser.add_argument('--config', type=Path, help='Explicit user configuration path for custom profiles')
     parser.add_argument('--replace', action='store_true', help='Replace this connection credential using local input')
     parser.add_argument('--check', action='store_true', help='Verify the saved credential without prompting or writing')
@@ -718,6 +748,7 @@ def main():
         else:
             path = default_config(args.client)
         result = setup_client(args.client, path, read_key=lambda: read_key(args.input, args.language),
+                              verify=lambda key: verify_key(key, transport=args.transport),
                               replace=args.replace, check=args.check,
                               report=lambda status: print(json.dumps(status), flush=True))
         result['client'] = args.client

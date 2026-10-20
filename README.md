@@ -28,7 +28,7 @@ codex plugin add videotranscriber-skills@video-transcriber-ai
 
 In the desktop app you can install from **Plugins Directory → Video Transcriber AI → Video Transcriber AI Skills** after adding the marketplace. Open a new conversation and ask to connect.
 
-The setup Skill launches a local helper. Paste the Key once into its hidden input; it validates and saves the connection, then checks the current tools and resumes your request. Manual refresh is a fallback only if the client has not loaded the connection. Temporary verification failures are retried in the same process without another paste. The Key is saved as plaintext in your local user config with restricted file permissions and remains available after restart. The helper requires Python 3.11+; if a local window cannot open, it provides a hidden-input command for your own terminal. See [local setup](skills/setup-videotranscriber/references/local-setup.md). Plugin installation does not supply a Key. These instructions target the local Codex/plugin route; other ChatGPT surfaces have their own connection requirements.
+The setup Skill launches a local helper. Paste the Key once into its hidden input; it validates and saves the connection, then checks the current tools and resumes your request. If native MCP tools have not loaded, the packaged MCP caller continues the task in the same conversation using the saved Key. Temporary verification failures are retried in the same process without another paste; installed curl is preferred for HTTP requests. The Key is saved as plaintext in your local user config with restricted file permissions and remains available after restart. The helper requires Python 3.11+; if a local window cannot open, it provides a hidden-input command for your own terminal. See [local setup](skills/setup-videotranscriber/references/local-setup.md). Plugin installation does not supply a Key. These instructions target the local Codex/plugin route; other ChatGPT surfaces have their own connection requirements.
 
 ### Claude Code
 
@@ -39,7 +39,7 @@ Run inside Claude Code:
 /plugin install videotranscriber-skills@video-transcriber-ai
 ```
 
-Enable the plugin and ask to connect Video Transcriber. Use the native **Video Transcriber API Key** field if your client presents it; otherwise the setup Skill launches the same [local helper](skills/setup-videotranscriber/references/local-setup.md), writes the Claude Code user configuration, and continues once the tools are available; reconnect only if the client has not loaded them. Existing-text analysis requires no Key. Environment-based options remain in the [client-specific guide](skills/setup-videotranscriber/references/clients.md).
+Enable the plugin and ask to connect Video Transcriber. Use the native **Video Transcriber API Key** field if your client presents it; otherwise the setup Skill launches the same [local helper](skills/setup-videotranscriber/references/local-setup.md), writes the Claude Code user configuration, and continues through native tools or the packaged MCP caller without requiring a client restart. Existing-text analysis requires no Key. Environment-based options remain in the [client-specific guide](skills/setup-videotranscriber/references/clients.md).
 
 ### WorkBuddy
 

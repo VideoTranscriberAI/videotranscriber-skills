@@ -10,7 +10,7 @@ For each supported local client, launch the installed `scripts/configure_client.
 
 A healthy connection is reused. A saved entry or cached tool name with no fresh authenticated discovery is reported as configured but unverified. Preserve unrelated settings and the user's chosen account.
 
-When the helper returns `credential_verified`, discover the current host tools first. If the three tools are now available, continue the original media request immediately without a user refresh or restart. `client_connection_verified: false` means the helper did not inspect the host, not that a reload is required. Use a real host reload capability if discovery is still missing; manual refresh is only the final fallback. Preserve the URL/task ID and reuse the saved valid Key.
+When the helper returns `credential_verified`, discover the current host tools first. If the three tools are now available, continue the original media request. Otherwise use a real host reload capability if available, then the packaged same-session caller when native tools are still missing. Preserve the URL/task ID and saved Key. No restart or second input is required for this path. Setup alone never authorizes a paid call. Do not operate Codex's own window through Computer Use or write an ad hoc network client.
 
 ## Missing client capabilities
 
@@ -45,3 +45,9 @@ Run setup against isolated user files for each supported client. Verify its root
 ## One paste across transient verification errors
 
 Inject a network failure and an unexpected discovery response, then success. Expected: one credential read, at most three verification attempts in the same process, no unvalidated credential written, safe progress metadata, then save on success. Exhaustion preserves the original file. Cancellation and explicit auth/account/gateway/permission errors stop without automatic replacement. Known write/runner permission failures are resolved before opening private input.
+
+## HTTP completeness and same-session continuation
+
+Exercise valid JSON returned in short reads, premature EOF before Content-Length, curl partial-transfer errors, and a result larger than the discovery limit. Credentials appear only on private stdin, not curl argv/config files; user curl config, redirects and insecure TLS are disabled. Without curl, use Python. Reject incomplete results.
+
+With no native tools/reload API, reuse a saved test credential through the packaged caller and finish the authorized media task. After an uncertain creation, repeat only identical arguments/idempotency key. Quota/validation errors do not recreate the task. Long results use a new private file; preserve existing files and omit signed URLs unless explicitly requested.
