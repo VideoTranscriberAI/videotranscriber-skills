@@ -1,5 +1,7 @@
 # One-paste local setup
 
+OpenClaw uses [its native Gateway connection flow](openclaw.md). It is not supported by `configure_client.py` or `call_mcp.py`; do not choose another adapter or treat a local desktop config as the remote Gateway configuration.
+
 The packaged `scripts/configure_client.py` supports local Codex, Claude Code, WorkBuddy, Cursor, Windsurf/Cascade, Gemini CLI, GitHub Copilot CLI, VS Code, Cline, and Roo Code. It requires Python 3.11+ and uses the standard library. Use an available host/bundled runtime; do not install system dependencies just to hide a missing-runtime error.
 
 ## Launch for the active client

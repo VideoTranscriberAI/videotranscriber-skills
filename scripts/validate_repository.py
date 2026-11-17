@@ -175,6 +175,15 @@ def validate_connection_packages() -> None:
         fail("WorkBuddy package version does not match the plugin")
 
 
+def validate_clawhub_package() -> None:
+    from build_clawhub_bundle import package_entries
+
+    try:
+        package_entries(ROOT)
+    except (OSError, ValueError) as exc:
+        fail(f"ClawHub package: {exc}")
+
+
 def validate_transcript_insights() -> None:
     skill_dir = SKILLS_DIR / "transcript-insights"
     if not skill_dir.is_dir():
@@ -266,6 +275,7 @@ def main() -> None:
         validate_skill(skill_dir)
     validate_plugin_manifests()
     validate_connection_packages()
+    validate_clawhub_package()
     validate_transcript_insights()
     validate_repository_markdown()
 

@@ -37,6 +37,7 @@ videotranscriber-skills/
 │   └── ARCHITECTURE.md
 ├── scripts/
 │   └── validate_repository.py
+├── integrations/clawhub/     # ClawHub bundle presentation and MCP templates
 ├── integrations/workbuddy/   # Token connector metadata and credential form
 ├── .agents/                  # Codex marketplace manifest
 ├── .codex-plugin/            # Codex Plugin manifest
@@ -56,6 +57,10 @@ When behavior changes:
 3. Update platform metadata only when discovery, branding, permissions, or packaged capabilities change.
 
 Do not maintain separate Codex and Claude copies of the same `SKILL.md`.
+
+## ClawHub distribution
+
+`integrations/clawhub/` and `scripts/build_clawhub_bundle.py` produce an allowlisted Codex-format distribution with one plugin marker. The package inherits canonical identity/version/license, uses the public remote MCP with a literal `VS_API_KEY` reference, and adds OpenClaw metadata only to packaged Skill copies. Existing desktop adapters stay separate from OpenClaw Gateway setup. See [build and acceptance](CLAWHUB.md).
 
 ## Skill Boundaries
 

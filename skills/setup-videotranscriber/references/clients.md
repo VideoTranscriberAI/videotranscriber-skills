@@ -2,6 +2,10 @@
 
 Read the row/section for the active host. Service: `https://videotranscriber.ai/mcp`, using `Authorization: Bearer API_KEY`. The Key comes from the official API console. Website login tokens and OAuth login are not used for this endpoint.
 
+## OpenClaw
+
+Follow [the OpenClaw Gateway guide](openclaw.md). The ClawHub bundle uses a remote Streamable HTTP connection and `Bearer ${VS_API_KEY}` from the actual Gateway environment. Reuse native plugin/MCP controls and confirm the active Gateway/Profile. OpenClaw is not a supported `--client` value for the desktop helper or packaged caller.
+
 ## Local clients: one-paste setup
 
 Use [the packaged helper](local-setup.md), choosing the active client's argument:

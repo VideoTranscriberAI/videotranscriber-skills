@@ -1,0 +1,15 @@
+{
+  "interface": {
+    "displayName": "Video Transcriber AI Skills",
+    "shortDescription": "Transcribe public media and analyze transcripts.",
+    "longDescription": "Connect Video Transcriber AI with your own API Key, transcribe public media, and analyze transcripts or subtitles. Transcription consumes independent API Quota. Existing text analysis requires no API Key.",
+    "capabilities": ["Read", "Write"],
+    "defaultPrompt": [
+      "Help me connect Video Transcriber AI and check the connection without creating a transcription.",
+      "Transcribe this public media URL and return the transcript and subtitles.",
+      "Summarize this transcript and extract action items."
+    ],
+    "composerIcon": "./assets/icon.png",
+    "logo": "./assets/icon.png"
+  }
+}

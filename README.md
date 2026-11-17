@@ -17,6 +17,18 @@ Official Skills from [Video Transcriber AI](https://videotranscriber.ai/) — co
 
 ## Install for your client
 
+### OpenClaw / ClawHub
+
+The repository provides a bundle containing all three Skills and a remote MCP configuration. Install an obtained, reviewed bundle directory with:
+
+```bash
+openclaw plugins install /absolute/path/to/reviewed-bundle
+```
+
+Replace the path with the actual bundle directory. Configure your API Key privately for the Gateway that runs OpenClaw, then ask to connect Video Transcriber. See [OpenClaw setup](skills/setup-videotranscriber/references/openclaw.md). This route uses native Gateway/plugin controls; the desktop helper does not support `--client openclaw`.
+
+A registry install name must come from the actual ClawHub listing; repository availability does not imply a published listing. Maintainers: [build, preflight, and acceptance](docs/CLAWHUB.md).
+
 ### ChatGPT Desktop with Codex / Codex CLI
 
 Run in a local terminal:

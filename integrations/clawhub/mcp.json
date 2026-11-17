@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "videotranscriber": {
+      "url": "https://videotranscriber.ai/mcp",
+      "transport": "streamable-http",
+      "headers": {
+        "Authorization": "Bearer ${VS_API_KEY}"
+      }
+    }
+  }
+}
