@@ -6,7 +6,7 @@ Connect [Video Transcriber AI](https://videotranscriber.ai/) to OpenClaw using y
 
 1. Install the bundle from its ClawHub listing or a reviewed local bundle directory.
 2. Sign in to Video Transcriber AI and create a Key in the API console.
-3. Configure `VS_API_KEY` in the environment of the Gateway that runs this plugin. Use the [OpenClaw connection guide](skills/setup-videotranscriber/references/openclaw.md) for local, service, remote, and named-profile installations. Never paste a Key into chat or include it in a command argument.
+3. Complete both required bindings on the Gateway/profile that runs this plugin: supply `VS_API_KEY` to its environment and explicitly configure the same-name native `mcp.servers.videotranscriber` connection with `Authorization: Bearer ${VS_API_KEY}`. Follow the [OpenClaw connection guide](skills/setup-videotranscriber/references/openclaw.md) for the exact non-secret configuration and local, service, remote, and named-profile setup. Apply it to the Gateway before checking the connection. Never paste a Key into chat or include it in a command argument.
 4. Ask: **Help me connect Video Transcriber AI and check the connection.** The check discovers tools without creating a transcription.
 5. Provide a supported public media URL and the requested transcript, subtitles, summary, or learning notes.
 
@@ -24,7 +24,7 @@ Pasted transcripts and SRT/VTT analysis require no Video Transcriber credential 
 
 ## Connection and recovery
 
-The service is `https://videotranscriber.ai/mcp`, using Streamable HTTP and a Bearer API Key. The bundle contains only `${VS_API_KEY}`, never a credential. OpenClaw's Gateway must receive the value; setting a variable in an unrelated terminal does not configure a running service.
+The service is `https://videotranscriber.ai/mcp`, using Streamable HTTP and a Bearer API Key. The bundle contains only `${VS_API_KEY}`, never a credential. The explicit native Gateway connection is required so its configuration loader expands the reference; installing the bundle and supplying the environment variable alone do not complete setup. OpenClaw's Gateway must receive the value; setting a variable in an unrelated terminal does not configure a running service. Preserve other servers and reuse `videotranscriber` so the native entry overrides the bundle without creating a duplicate connection.
 
 Reuse existing task IDs and creation idempotency keys. Connection failures, expired results, and failed tasks do not authorize creating replacements. See the [tool contract](skills/transcribe-media/references/tool-contract.md) for arguments and error decisions. Local/private media uploads are not supported.
 

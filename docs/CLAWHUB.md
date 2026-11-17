@@ -4,7 +4,7 @@
 
 ## 构建输入与产物
 
-`integrations/clawhub/plugin.json` 只覆盖展示信息；名称、版本、作者、仓库地址和 MIT 许可证来自现有 Codex 清单。`integrations/clawhub/mcp.json` 声明 Streamable HTTP 和字面占位符 `Bearer ${VS_API_KEY}`。
+`integrations/clawhub/plugin.json` 只覆盖展示信息；名称、版本、作者、仓库地址和 MIT 许可证来自现有 Codex 清单。`integrations/clawhub/mcp.json` 声明 Streamable HTTP 和字面占位符 `Bearer ${VS_API_KEY}`。用户接入必须同时完成 Gateway 的 `VS_API_KEY` 环境绑定和原生 `mcp.servers.videotranscriber` 配置，由 Gateway 配置加载器展开请求头引用。原生配置使用相同服务名覆盖包内连接；仅安装包并设置环境变量不足以完成鉴权配置。
 
 ```bash
 python3 scripts/validate_repository.py
@@ -49,16 +49,18 @@ openclaw plugins install /absolute/review-bundle
 openclaw plugins inspect videotranscriber-skills
 ```
 
-按产物内的 [OpenClaw 接入说明](../skills/setup-videotranscriber/references/openclaw.md)配置实际 Gateway 的凭证。检查以下场景：
+按产物内的 [OpenClaw 接入说明](../skills/setup-videotranscriber/references/openclaw.md)配置实际 Gateway/profile 的环境变量和必需的原生 MCP 连接，保留其他连接及已有有效凭证。检查以下场景：
 
 | 场景 | 验收结果 |
 | --- | --- |
 | 无 Key | 接入说明和已有文字/SRT 分析可用；转写连接明确不可用，不循环索取凭证 |
-| 正确 Key | 认证握手成功，当前会话发现三个工具；不通过创建任务检查连接 |
-| 重启 Gateway | 使用同一用户/Profile 保存的凭证，无需重复配置 |
+| 原生连接绑定 | 使用非敏感占位测试值检查 Gateway 配置加载后的请求头已展开；只记录判断结果，不输出值。确认同名原生连接覆盖包内连接，单独安装包或设置环境变量不计为通过 |
+| 正确 Key | 必需的环境变量和原生连接均已应用；认证握手成功，当前会话发现三个工具；不通过创建任务检查连接 |
+| 重启 Gateway | 使用同一用户/Profile 的原生连接与凭证，重启后重新发现工具；前台进程继承环境与后台服务持久化环境分别记录，前台通过不代替后台服务验收 |
 | 错误或撤销的 Key | 给出明确凭证错误，日志无 Key，无自动付费重试 |
 | 网关 401/403、网络超时 | 与 API 凭证错误区分，连接检查有上限 |
 | 真实转写 | 事先明确测试账号、输入和额度范围；创建、轮询、结果完整闭环 |
+| 已有任务复验 | 复用记录中的 `request_id`，只调用 `get_transcription` 和 `get_transcription_result`，核对正文与字幕存在性；结果过期或不可用时记录原因，不新建替代任务 |
 | 创建响应丢失、限流、额度不足 | 保留原幂等键和参数；退避或停止，不重复创建 |
 | processing 超出等待预算 | 保留原任务 ID，可继续查询；不把客户端等待上限当后端失败 |
 | 结果过期、失败或取消 | 报告实际终态，不自动创建替代任务 |

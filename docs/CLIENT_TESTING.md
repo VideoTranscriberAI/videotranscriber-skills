@@ -17,7 +17,7 @@
 
 | 客户端 | 适配参数 | 验收重点 |
 | --- | --- | --- |
-| OpenClaw | 原生 Gateway/MCP 配置 | ClawHub bundle、实际 Gateway/Profile 的 `VS_API_KEY`、无 Key 文字分析、重启复用；不运行桌面适配脚本 |
+| OpenClaw | 原生 Gateway/MCP 配置 | ClawHub bundle、实际 Gateway/Profile 的 `VS_API_KEY` 与必需的同名 `mcp.servers.videotranscriber`、无 Key 文字分析、重启复用；不运行桌面适配脚本 |
 | Codex | `codex` | 用户 `config.toml`、自动工具发现与刷新兜底 |
 | Claude Code | `claude-code` | 用户 `.claude.json`、插件/项目连接覆盖、`/mcp` 重连 |
 | WorkBuddy | `workbuddy` | 用户 `.workbuddy/mcp.json`、Skill ZIP 上传、`streamableHttp` |
@@ -33,9 +33,13 @@
 
 ## OpenClaw 验收
 
-使用隔离的测试用户/Profile 安装审阅产物，按 [ClawHub 验收表](CLAWHUB.md#openclaw-实机验收)记录实际版本、凭证归属、连接发现、失败恢复和任务闭环。测试包括无 Key 仍能分析 SRT、Key 配置在远程 Gateway 而非浏览器本机、后台服务重启复用、多个 Profile 不串用凭证、连接检查不创建任务。打包自动化不代表此矩阵已经执行；真实付费调用需要明确测试账号及额度范围。
+使用隔离的测试用户/Profile 安装审阅产物，按 [ClawHub 验收表](CLAWHUB.md#openclaw-实机验收)记录实际版本、凭证归属、连接发现、失败恢复和任务闭环。必须同时配置实际 Gateway 的 `VS_API_KEY` 环境变量与同名原生 `mcp.servers.videotranscriber`，通过原生配置加载器展开 `Bearer ${VS_API_KEY}`；只有包识别或环境变量存在不能计为鉴权通过。
+
+测试包括无 Key 仍能分析 SRT、Key 和原生连接配置在远程 Gateway 而非浏览器本机、后台服务重启复用、多个 Profile 不串用凭证、连接检查不创建任务。前台 Gateway 启停与后台服务持久化配置分别记录。已有任务复验仅查询原 `request_id` 的状态与结果，结果过期或不可用时不得创建替代任务。打包自动化不代表此矩阵已经执行；真实付费调用需要明确测试账号及额度范围。
 
 ## 普通用户首次接入
+
+本节的配置助手、隐藏输入框和配套调用脚本步骤适用于桌面适配客户端。OpenClaw 按上节及 [OpenClaw 接入说明](../skills/setup-videotranscriber/references/openclaw.md)完成两项原生绑定，再通过当前 Gateway 的原生工具继续；应用配置可能需要重载或重启 Gateway，不运行桌面适配脚本。
 
 在新对话中只发正常安装请求：
 
@@ -61,6 +65,8 @@
 这个公开视频约 110 秒；基础转写会创建真实任务，预期按两分钟计费，以服务实际 `usage` 为准。连接握手不创建任务、不消耗转写 Quota。
 
 ## 失败与恢复
+
+下表列出桌面适配客户端的配置助手和脚本恢复预期。OpenClaw 使用其接入说明中的原生 Gateway 恢复步骤，不使用 `configure_client.py` 或 `call_mcp.py`。
 
 | 场景 | 预期 |
 | --- | --- |
@@ -97,5 +103,7 @@ python3 -m unittest discover -s tests -p 'test_*.py'
 - HTTP 401/403 必须结合服务的结构化错误码判断；网关拒绝不等于凭证失效。
 - 离线模拟响应覆盖不到真实网关策略，发布前补一次不含真实凭证的生产握手检查。
 - 配置文件存在不代表它属于当前 Profile；多 Profile 时先确定生效位置。
+- 包内请求头占位符与 Gateway 原生配置的环境变量展开须分别验证。使用非敏感测试值只记录是否展开，不能用模板中存在 `${VS_API_KEY}` 或工具可见代替真实鉴权；原生同名连接是接入必需步骤。
+- OpenClaw 安装验收按包安装、原生连接配置、鉴权发现、原任务查询、Gateway 重启后复查的顺序执行；区分原生 MCP 调用与 Agent 对话中的 Skill 自动触发。
 - 升级须确认已安装文件真的更新，避免安装器跳过已有 Skill 造成版本混用。
 - 这些规则适合放在本项目的测试与接入说明中，不应扩展成所有项目的通用业务限制。
