@@ -51,3 +51,11 @@ Inject a network failure and an unexpected discovery response, then success. Exp
 Exercise valid JSON returned in short reads, premature EOF before Content-Length, curl partial-transfer errors, and a result larger than the discovery limit. Credentials appear only on private stdin, not curl argv/config files; user curl config, redirects and insecure TLS are disabled. Without curl, use Python. Reject incomplete results.
 
 With no native tools/reload API, reuse a saved test credential through the packaged caller and finish the authorized media task. After an uncertain creation, repeat only identical arguments/idempotency key. Quota/validation errors do not recreate the task. Long results use a new private file; preserve existing files and omit signed URLs unless explicitly requested.
+
+## OpenClaw Gateway and profiles
+
+Use the native OpenClaw guide, never a desktop `--client` adapter or the desktop caller. Identify the actual Gateway machine, service user and active profile before guiding credential configuration. The bundle's literal `${VS_API_KEY}` is resolved by that runtime; a local browser terminal, unrelated desktop config, skill-only environment value, or protected-store entry alone does not prove the Gateway has the variable. Preserve other environment/configuration entries and never print their contents.
+
+No Key: connect guidance and supplied SRT analysis remain usable without a paid task. Correct Key: authenticated discovery must expose the three tools before continuing the original request. A saved setting or detected plugin is not live proof. A running service must receive changed credentials through its actual environment/application flow; after restart, verify reuse. Wrong/revoked Key and gateway/network failures have distinct remedies and bounded checks.
+
+A plugin-contributed server may not exist in the saved-server CLI catalog. Use the plugin runtime/fresh tool discovery; run `mcp doctor` for the explicitly configured `mcp.servers` override. Unknown saved-server names do not by themselves establish a failed plugin. Record real OpenClaw acceptance separately from package tests.

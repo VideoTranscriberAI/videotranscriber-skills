@@ -17,6 +17,7 @@
 
 | 客户端 | 适配参数 | 验收重点 |
 | --- | --- | --- |
+| OpenClaw | 原生 Gateway/MCP 配置 | ClawHub bundle、实际 Gateway/Profile 的 `VS_API_KEY`、无 Key 文字分析、重启复用；不运行桌面适配脚本 |
 | Codex | `codex` | 用户 `config.toml`、自动工具发现与刷新兜底 |
 | Claude Code | `claude-code` | 用户 `.claude.json`、插件/项目连接覆盖、`/mcp` 重连 |
 | WorkBuddy | `workbuddy` | 用户 `.workbuddy/mcp.json`、Skill ZIP 上传、`streamableHttp` |
@@ -29,6 +30,10 @@
 | Roo Code | `roo-code` | 实际全局 `mcp_settings.json`、`streamable-http` |
 
 自定义用户目录、Portable、Insiders、命名 Profile、远程/WSL 扩展均须确认实际生效的配置位置。Agent 应处理路径识别；无法判断时，要求用户打开一次客户端的用户/全局 MCP 配置定位位置。不要把凭证写到项目中，也不要同时修改所有检测到的应用。
+
+## OpenClaw 验收
+
+使用隔离的测试用户/Profile 安装审阅产物，按 [ClawHub 验收表](CLAWHUB.md#openclaw-实机验收)记录实际版本、凭证归属、连接发现、失败恢复和任务闭环。测试包括无 Key 仍能分析 SRT、Key 配置在远程 Gateway 而非浏览器本机、后台服务重启复用、多个 Profile 不串用凭证、连接检查不创建任务。打包自动化不代表此矩阵已经执行；真实付费调用需要明确测试账号及额度范围。
 
 ## 普通用户首次接入
 

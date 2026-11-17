@@ -2,6 +2,9 @@
 
 ## Unreleased — v0.4.2
 
+- Add an allowlisted ClawHub bundle builder, remote API Key MCP template, package validation, and artifact tests. OpenClaw metadata is generated in distribution copies.
+- Add OpenClaw Gateway/profile credential guidance and acceptance cases; distinguish native MCP diagnostics from the supported desktop helper/caller routes. Registry publication and real-account acceptance are separate from local packaging.
+
 - Continue authorized transcription through a packaged official MCP caller when the host has not loaded native tools. Reuse saved credentials, task IDs, and exact creation arguments; no mandatory client restart or ad hoc HTTP script.
 - Prefer installed curl with credentials piped through stdin, verified TLS and no redirects. Collect Python short reads and reject incomplete responses. Retain one credential input across bounded verification retries.
 - Preserve long results in a new private JSON file, redact credentials and omit download links by default, and report tool/API errors separately from transport failures.

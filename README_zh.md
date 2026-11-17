@@ -17,6 +17,18 @@
 
 ## 选择你使用的客户端
 
+### OpenClaw / ClawHub
+
+本仓库提供包含三个 Skill 和远程 MCP 配置的 bundle。拿到经过审阅的发布目录后，可执行：
+
+```bash
+openclaw plugins install /absolute/path/to/reviewed-bundle
+```
+
+将路径替换为实际目录。在运行 OpenClaw Gateway 的环境中私密配置自己的 API Key，然后说“帮我连接 Video Transcriber”。详见 [OpenClaw 接入说明](skills/setup-videotranscriber/references/openclaw.md)。此入口使用原生 Gateway/插件配置；桌面助手不支持 `--client openclaw`。
+
+注册表安装名称以实际 ClawHub 条目为准；仓库可访问不代表插件已经上架。维护者查看[构建、预检和验收](docs/CLAWHUB.md)。
+
 ### ChatGPT Desktop with Codex / Codex CLI
 
 在本机终端执行：
